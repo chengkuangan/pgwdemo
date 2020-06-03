@@ -1,0 +1,17 @@
+use devops
+
+db.createUser(
+  {
+    user: "devops",
+    pwd: "devops",
+    roles: [ { role: "readWrite", db: "devops" } ]
+  }
+)
+
+./mongo --port 27017 -u "devops" -p "devops" --authenticationDatabase "devops"
+
+mvn spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.arguments=--MONGODB_USER=devops,--MONGODB_PASSWORD=devops,--MONGODB_SERVER_HOST=localhost,--MONGODB_SERVER_PORT=27017,--MONGODB_DATABASE=devops
+
+
+
+oc new-app -n ganck-pg-dev --allow-missing-imagestream-tags=true -f deployment-templates.yaml

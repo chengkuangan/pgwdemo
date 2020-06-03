@@ -1,0 +1,45 @@
+
+== Event Correlator Service
+This as part of Payment Gateway Demo services. It requires a Kafka server to work as desired.
+
+=== To Deploy and Run on Openshift
+
+1. Clone this git onto your computer. Modify the the src/main/java/resources/applcation.properties with the following value:
+
+spring.profiles.active=ocp
+
+Make sure the Kafka properties in src/main/java/resources/application-dev.properties are correct configured according to your environment:
+
++
+[source,bash]
+----
+spring.kafka.consumer.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVER}
+spring.kafka.consumer.group-id=${KAFKA_CONSUMER_GROUPID}
+spring.kafka.consumer.auto-offset-reset=earliest
+spring.kafka.consumer.enable-auto-commit=true
+----
+
+2. In the project folder, run the following oc command to create the application.
+
+oc new-app -f templates/deployment-templates.yaml
+
+=== To run as standalone apps
+
+1. Clone this git onto your computer. Modify the the src/main/java/resources/applcation.properties with the following value:
+
+spring.profiles.active=dev
+
+Make sure the Kafka properties in src/main/java/resources/application-dev.properties are correct configured according to your environment:
+
++
+[source,bash]
+----
+spring.kafka.consumer.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVER}
+spring.kafka.consumer.group-id=${KAFKA_CONSUMER_GROUPID}
+spring.kafka.consumer.auto-offset-reset=earliest
+spring.kafka.consumer.enable-auto-commit=true
+----
+
+2. Run the following maven command in the project folder to start the SpringBoot apps:
+
+mvn spring-boot:run 

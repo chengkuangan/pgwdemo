@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <title>Customer Account</title>
+    <!-- link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+
+<body>
+    <center>
+        <br>
+        <H1>Account Summary - {{customer.accountId}}</H1>
+        <br><br>
+        <table align=center cellspacing=5 cellpadding=5 border=0 width="50%">
+            <tr>
+                <td align="center">
+                    <input type="button" name="btnTransfer" value="Transfer Money" onclick="javascript:window.location.href='/transfer'">&nbsp;&nbsp;
+                    <input type="button" name="btnTopup" value="Topup Balance">&nbsp;&nbsp;
+                    <input type="button" name="btnUpdate" value="Update Profile">&nbsp;&nbsp;
+                    <input type="button" name="btnHistory" value="View Transactions">&nbsp;&nbsp;
+                    <input type="button" name="btnLogout" value="Logout" onclick="javascript:window.location.href='/logout'">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table align=center cellspacing=5 cellpadding=5 border=1 width="100%">
+                        <tr>
+                            <td align="center">Account Balance</td>
+                        </tr>
+                        <tr>
+                            <td align="center">$&nbsp;{{customer.balance}}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+        </table>
+    </center>
+</body>
+
+</html>

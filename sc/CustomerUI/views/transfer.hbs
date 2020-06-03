@@ -1,0 +1,146 @@
+<html>
+
+<head>
+    <title>{{title}}</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="/js/inputValidation.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        /*
+        $(document).ready(function () {
+
+            $('#btnSave').click(function () {
+                if ($('#toAccountId').val().trim().length == 0) {
+                    alert("Account Id is required.");
+                    $('#toAccountId').focus();
+                    return;
+                }
+                if ($('#amount').val().trim().length == 0) {
+                    alert("Amount is required.");
+                    $('#amount').focus();
+                    return;
+                }
+                if (!confirm("Proceed to transfer the money?")) {
+                    return;
+                }
+
+                console.log("amount: " + $('#amount').val());
+                console.log("from: " + $('#fromAccountId').val());
+                console.log("to: " + $('#toAccountId').val());
+
+                $.ajax({
+                    type: "POST",
+                    url: "/transfer",
+                    data: { "amount": $('#amount').val(), "sourceAccount": $('#fromAccountId').val(), "targetAccount": $('#toAccountId').val() }, // data to be submit
+                    success: function (data) {
+                        $('#result').text('Credit transfer submitted.');
+                        console.log("data " + data);
+                    },
+                    error: function (err) {
+                        $('#result').text('Error submitting request.');
+                        //console.log("data " + data);
+                    }
+                });
+
+                /*
+                $.post('{{creditAPI_URL}}',   // url
+                    { "amount": $('#amount').val(), "sourceAccount": $('#fromAccountId').val(), "targetAccount": $('#toAccountId').val() }, // data to be submit
+                    function (data, status, jqXHR) {// success callback
+                        $('#result').text('Transaction submitted. Transaction Id: ' + data.data._id);
+                        $('#btnSave').attr("disabled", true);
+                        $('#amount').attr("readonly", true);
+                        $('#toAccountId').attr("readonly", true);
+                        console.log("status " + status);
+                        console.log("data " + data);
+                    });
+
+            });
+        });
+
+        */
+    </script>
+</head>
+
+<body>
+    <center>
+        <br>
+        <H1>Transfer Money</H1>
+        <br><br>
+        {{#ifEquals status 'error'}}
+        <span id="result" style="color:red"></span>
+        <br><br>
+        {{/ifEquals}}
+        
+        {{#ifEquals status 'ok'}}
+        <span id="result" style="color:darkgray">Credit Transfer submitted successfully.</span>
+        <br><br>
+        <table align=center cellspacing=5 cellpadding=5 border=0 width="450px">
+            <tr>
+                <td>
+                    <table align=center cellspacing=5 cellpadding=5 border=0 width="100%">
+                        <tr>
+                            <td width="25%">Account Id:</td>
+                            <td width="75%">
+                                {{targetAccount}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Amount:</td>
+                            <td width="75%">
+                                {{amount}}
+                            </td>
+                            
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td align=right>
+                    <input type="button" name="btnCancel" value="OK" onclick="window.location.href='/'">
+                </td>
+            </tr>
+        </table>
+        {{else}}
+        Transfer money to the following account.
+        <br><br>
+        <form name="frmTransfer" method="post" action="javascript:submitTransfer()">
+            <table align=center cellspacing=5 cellpadding=5 border=0 width="450px">
+                <tr>
+                    <td>
+                        <table align=center cellspacing=5 cellpadding=5 border=0 width="100%">
+                            <tr>
+                                <td width="25%">Account Id:</td>
+                                <td width="75%">
+                                    <input type="text" name="toAccountId" id="toAccountId" data-mandatory="true"
+                                        value="{{targetAccount}}" size=30>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Amount:</td>
+                                <td><input type="text" value="{{amount}}" name="amount" id="amount" data-mandatory="true" size=25></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td align=right>
+                        <button name="btnSubmit">Submit</button>
+                        <input type="button" name="btnCancel" value="Cancel" onclick="window.location.href='/'">
+                    </td>
+                </tr>
+            </table>
+            {{#if sourceAccount}}
+                <input type="hidden" value="{{sourceAccount}}" name="fromAccountId" id="fromAccountId">
+            {{else}}
+                <input type="hidden" value="{{customer.accountId}}" name="fromAccountId" id="fromAccountId">
+            {{/if}}
+        </form>
+        {{/ifEquals}}
+    </center>
+
+</body>
+
+</html>

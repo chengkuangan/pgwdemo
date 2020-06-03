@@ -1,0 +1,54 @@
+<html>
+
+<head>
+    <title>{{title}}</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+
+<body>
+    <center>
+        <br>
+        <H1>{{title}}</H1>
+        <br>
+        <br><br>
+        <table align=center cellspacing=5 cellpadding=5 border=0 width="450px">
+            <tr>
+                <td align=right><input type="button" name="btnSave" value="Save">&nbsp;<input type="button"
+                        name="btnCancel" value="Cancel" onclick="window.location.href='/'"></td>
+            </tr>
+            <tr>
+                <td>
+                    <table align=center cellspacing=5 cellpadding=5 border=0 width="100%">
+                        <tr>
+                            <td width="10%">Account Id:</td>
+                            <td width="80%">
+                                <input type="text" name="accountId" {{#if customer.accountId}}readonly{{/if}}
+                                    value="{{customer.accountId}}" size=30>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Name:</td>
+                            <td><input type="text" name="name" value="{{customer.name}}" size=50></td>
+                        </tr>
+                        <tr>
+                            <td>Age:</td>
+                            <td><input type="text" name="age" value="{{customer.age}}" size=3 maxlength="3"></td>
+                        </tr>
+                        <tr>
+                            <td>Nationality:</td>
+                            <td><input type="text" name="nationality" value="{{customer.nationality}}" size=30></td>
+                        </tr>
+                        <tr>
+                            <td>Address:</td>
+                            <td><input type="text" name="address" value="{{customer.address}}" size="50"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+
+</html>

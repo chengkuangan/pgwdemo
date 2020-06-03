@@ -1,0 +1,12 @@
+{
+  "realm": "PaymentGateway",
+  "auth-server-url": "http://localhost:8080/auth",
+  "ssl-required": "none",
+  "resource": "CustomerAccount",
+  "verify-token-audience": true,
+  "credentials": {
+    "secret": "e9c8f236-66c7-4034-9758-ab29541f9cec"
+  },
+  "use-resource-role-mappings": true,
+  "confidential-port": 0
+}

@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: event-correlator-template
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: ${APPLICATION_NAME}
+      deploymentconfig: ${APPLICATION_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    replicas: 1
+    selector:
+      app: ${APPLICATION_NAME}
+      deploymentconfig: ${APPLICATION_NAME}
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: ${APPLICATION_NAME}
+          deploymentconfig: ${APPLICATION_NAME}
+      spec:
+        containers:
+        - env:
+          # - name: KAFKA_BOOTSTRAP_SERVER
+          - name: SPRING_KAFKA_CONSUMER_BOOTSTRAP-SERVERS
+            value: ${KAFKA_BOOTSTRAP_SERVER}
+          # - name: KAFKA_CONSUMER_GROUPID
+          - name: SPRING_KAFKA_CONSUMER_GROUP-ID
+            value: ${KAFKA_CONSUMER_GROUPID}  
+          # - name: ACCOUNT_BALANCE_POST_URL
+          - name: ACCOUNTBALANCE_POST_URL
+            value: ${ACCOUNT_BALANCE_POST_URL}
+          # - name: ACCOUNT_BALANCE_GET_URL
+          - name: ACCOUNTBALANCE_GET_URL
+            value: ${ACCOUNT_BALANCE_GET_URL}    
+          - name: SERVER_PORT
+            value: ${SERVER_PORT}  
+          image: ${APPLICATION_NAME}:latest
+          imagePullPolicy: IfNotPresent
+          name: ${APPLICATION_NAME}
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APPLICATION_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APPLICATION_NAME}:latest
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      build: ${APPLICATION_NAME}
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APPLICATION_NAME}:latest
+    runPolicy: Serial
+    source:
+      type: Binary
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: redhat-openjdk18-openshift:1.2
+          namespace: openshift
+        env:
+        - name: MAVEN_MIRROR_URL
+          value: ${MAVEN_MIRROR_URL}  
+      type: Source
+    triggers:
+    - type: ImageChange
+      type: ConfigChange  
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: "${APPLICATION_NAME}"
+#  spec:
+#    tags:
+#    - name: "${APPLICATION_NAME}"
+#      from:
+#        kind: ImageStreamTag
+#        name: ${APPLICATION_NAME}:latest
+#      importPolicy: {}
+#      annotations:
+#        description: mservices image tag
+#        tags: ${APPLICATION_NAME}
+#        version: "latest"  
+parameters:
+- description: Application Name
+  displayName: Application Name
+  name: APPLICATION_NAME
+  value: event-correlator
+  required: true
+- description: Kafka Bootstrap Server
+  displayName: Kafka Bootstrap Server with port number
+  name: KAFKA_BOOTSTRAP_SERVER
+  value: kafka-cluster-kafka-bootstrap:9092
+  required: true
+- description: Kafka consumer group
+  displayName: Kafka consumer groupd ID
+  name: KAFKA_CONSUMER_GROUPID
+  value: credit-consumers
+  required: true
+- description: Maven Repo URL
+  displayName: Maven Repo URL
+  name: MAVEN_MIRROR_URL
+  required: false  
+- description: Account Balance Service POST URL
+  displayName: Account Balance Service POST URL
+  name: ACCOUNT_BALANCE_POST_URL
+  required: true
+  value: http://accountbalance:8080/ws/pg/balance
+- description: Account Balance Service GET URL
+  displayName: Account Balance Service GET URL
+  name: ACCOUNT_BALANCE_GET_URL
+  required: true
+  value: http://accountbalance:8080/ws/pg/balance
+- description: The default port the service listen at
+  displayName: Service Port
+  name: SERVER_PORT
+  value: "8080"
+  required: true    

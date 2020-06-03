@@ -1,0 +1,9 @@
+= MongoDB Deployment Templates and Sample Config Files for MongoDB Kafka Connect
+
+== MongoDB Kafka Connect Config File
+To configure the Kafka Connect, run the following command. At time this is written, I encountered JSON document error with curl command line. The same problem does not occur if I use postman to post the config file content to the Kafka Connect.
+
+The following configure the MongoDB Sink Connector.
+
+[source,bash]
+curl -d connect-mongodb-sink.json -H "Content-Type: application/json" -X POST http://<connector_hostname>:8083/connectors

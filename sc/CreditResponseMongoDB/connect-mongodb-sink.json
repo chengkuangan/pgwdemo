@@ -1,0 +1,16 @@
+{
+    "name": "mongodb-sink",
+    "config": {
+        "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+        "tasks.max": 1,
+        "topics": "credit-response",
+        "connection.uri": "mongodb://creditresponse:creditresponse@creditresponse:27017",
+        "database": "creditresponse",
+        "collection": "response",
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schemas.enable": false,
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": false,
+        "max.num.retries": 3
+    }
+}

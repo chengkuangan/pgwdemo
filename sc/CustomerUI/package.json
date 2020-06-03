@@ -1,0 +1,20 @@
+{
+  "name": "CustomerUI",
+  "version": "0.0.1",
+  "description": "Customer UI",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "private": true,
+  "author": "Gan Cheng Kuan",
+  "dependencies": {
+    "axios": "latest",
+    "cors": "^2.8.5",
+    "express": "latest",
+    "express-session": "^1.17.0",
+    "hbs": "latest",
+    "keycloak-connect": "^8.0.1",
+    "walk": "^2.3.14"
+  }
+}

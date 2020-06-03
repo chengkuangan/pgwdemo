@@ -1,0 +1,30 @@
+# Credit Service
+
+This is credit service built in Nodejs as part of the Payment Gateway demo.
+You will need to have Kafka server running in order to demo this service. You can deploy a local Kafka server or deploy Red Hat AMQ Streams.
+
+## To deploy and run on Openshift
+
+1. Clone this repo.
+
+2. Modify the following template parameters to suit your environment settings and run the following command to create the container application.
+oc new-app -f templates/creditservice.json
+
+## To run locally
+
+1. Clone this repo.
+
+2. Navigate to the project folder and enter the following command inside the root folder to start service locally.
+
+PORT=8084 KAFKA_BOOTSTRAP_SERVER=localhost:9092 node index.js
+
+## Sample Data Structure
+
+The following is the sample data structure to submit to the application as JSON:
+
+{
+    "action" : "_CREATE",
+    "amount": 5.05, 
+    "sourceAccount": "20191029-MY-123456789",
+    "targetAccount": "20191030-MY-123456789"
+}
