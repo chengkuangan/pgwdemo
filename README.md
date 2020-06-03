@@ -104,8 +104,7 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 
 * **RHSSO**
 <br>Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to protect and enable web applications and microservices with many industry security standards. Freeing the developers from these challenges tasks to fully focus on developing the application logic.  
-<br>
-A PaymentGateway security realm is created by the installation script with the following details:<br><br>
+<br>A PaymentGateway security realm is created by the installation script with the following details:<br><br>
 
 ![RHSSO Client Settings](images/rhsso_client_settings.png)
 ![RHSSO Users](images/rhsso_users.png)
