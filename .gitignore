@@ -9,8 +9,8 @@ resources
 dd
 bin/deployArgoCD.sh
 Documentation
-kafka-resources/examples
-kafka-resources/install
+kafka-resource/examples
+kafka-resource/install
 sc/AccountProfile/.DS_Store
 sc/AccountProfile/.classpath
 sc/AccountProfile/.project
