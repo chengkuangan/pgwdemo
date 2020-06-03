@@ -105,7 +105,7 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 * **RHSSO**
 <br>Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to protect and enable web applications and microservices with many industry security standards. Freeing the developers from these challenges tasks to fully focus on developing the application logic.  
 <br>
-A PaymentGateway security realm is created by the installation script with the following details:
+A PaymentGateway security realm is created by the installation script with the following details:<br><br>
 
 ![RHSSO Client Settings](images/rhsso_client_settings.png)
 ![RHSSO Users](images/rhsso_users.png)
@@ -212,55 +212,8 @@ spec:
         certificate: ca.crt
   image: docker.io/chengkuan/amq-streams-kafka-connect-23:1.3.0
 ```
-5. Edit `bin/deployDemo.sh` and make sure the following values are matching your OpenShift environment. Especially these values:
-<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`NAMESPACE_POSTFIX`
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`KAFKA_CLUSTER_NAME`
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`APP_DOMAIN_NAME`
-<br><br>The following is the snippet of bash script in `bin/deployDemo.sh` that you need to pay attention to.
-```
-NAMESPACE_PREFIX=""
-NAMESPACE_POSTFIX="-pg-gw"
-APPS_NAMESPACE="$NAMESPACE_PREFIX$NAMESPACE_POSTFIX"
-KAFKA_NAMESPACE=$APPS_NAMESPACE
-KAFKA_OPERATOR_NAMESPACE=$KAFKA_NAMESPACE
-KAFKA_CLUSTER_NAME="kafka-cluster"
-APPS_PROJECT_DISPLAYNAME="Payment Gateway"
-CREDITRESPONSE_MONGODB_NAME="creditresponse"
-APP_DOMAIN_NAME="apps.ocpcluster1.gemsdemolab.com"
-RHSSO_NAMESPACE="$NAMESPACE_PREFIX-rhsso"
-OC_USER=""
-SSO_APPNAME="sso"
-SSO_ADMIN_USERNAME="admin"
-SSO_ADMIN_PASSWORD="password"
-DEPLOY_KAFKA_OPERATOR="no"
 
-function init(){
-    
-    set echo off
-    OC_USER="$(oc whoami)"
-    set echo on
-    
-    if [ $? -ne 0 ] || [$OC_USER == ""]; then
-        echo
-        echo "Please login to Openshift before proceed..."
-        echo
-        exit 0
-    fi
-    NAMESPACE_PREFIX=$OC_USER
-    APPS_NAMESPACE="$NAMESPACE_PREFIX$NAMESPACE_POSTFIX"
-    RHSSO_NAMESPACE="$NAMESPACE_PREFIX-rhsso"
-    KAFKA_NAMESPACE=$APPS_NAMESPACE
-    KAFKA_OPERATOR_NAMESPACE=$KAFKA_NAMESPACE
-    KAFKA_CLUSTER_NAME="kafka-cluster"
-    echo
-    echo "Creating temporary directory ../tmp "
-    mkdir ../tmp
-}
-```
-You will notice namespace prefix and postfix are used so that if this demo is deployed into shared environment, there will be no concern of duplicate OpenShift project names.
-
-6. Finally, in the command prompt. Make sure you login to OpenShift with the correct user and run the following to deploy the demo.
+5. Finally, in the command prompt. Make sure you login to OpenShift with the correct user and run the following to deploy the demo.
 ```
 cd bin 
 ./deployDemo.sh`
