@@ -213,7 +213,7 @@ spec:
   image: docker.io/chengkuan/amq-streams-kafka-connect-23:1.3.0
 ```
 
-5. Finally, in the command prompt. Make sure you login to OpenShift with the correct user and run the following to deploy the demo.
+5. Finally, at the command prompt. Make sure you login to OpenShift with the correct user and run the following to deploy the demo.
 ```
 cd bin 
 ./deployDemo.sh`
