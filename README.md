@@ -29,18 +29,17 @@ As the demo grows over time, the number of microservices also increased. This se
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Account Id**: 20191029-MY-123456710
 <br><br>
 The CustomerUI service is deployed with name as **customer-ui** on OpenShift. It is protected with Red Hat Single Sign-On (RHSSO). The respective user credentials above are created in RHSSO when the installation script is executed. Please refer the section of RHSSO for more details on this.
-
+<br><br>
 * **Customer Service**
 <br>Customer Service is developed in Red Hat Fuse. This service provide CustomerUI a single API for CRUD operations whichever applicable. At the current demo, it is only provides GET operation to retrieve account profile and account balance information. It provides a single API call to retrieve customer account profile and account balance from Account Profile Service and Account Service, and merges these data from 2 separate locations and return the information in one single JSON format.
 <br><br>
 The Customer Service is deployed with name as **customerservice** on OpenShift. It serves the REST at paths
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/{accountId}`
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/{accountId}`
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/all`
 <br><br>The following shows the Camel context diagram of the Fuse implementation.
 
 ![Customer Service Fuse Camel Context Diagram](images/customerservice_camel_diagram.png)
-
+<br><br>
 * **Account Service**
 <br>Account Service provides REST interface to access and retrieve the latest account balance information from the Account Balance DB (MongoDB). The database starts with balance of $250 for John Doe and $150 for Jenny Doe.
 <br><br>It is developed in SpringBoot, and deployed as **accountservice** on OpenShift. It serves the REST requests at the following paths:
@@ -49,7 +48,7 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/balance/all`
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**POST** `/ws/pg/balance/`
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PUT** `/ws/pg/balance/`
-
+<br><br>
 * **Account Profile Service**
 <br>Account Profile Service provides REST interface access to customer account profile information. It retrives customer account profile stored in the Account Profile DB (MongoDB).
 <br><br>It is developed in SpringBoot and deployed as **accountprofile** on OpenShift. It provides the following REST interfaces:
@@ -57,27 +56,27 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/account/{accountId}`
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/account/all`
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**POST** `/ws/pg/account`
-
+<br><br>
 * **Credit Service**
 <br>Credit Service is developed in NodeJs and provides REST API for CustomerUI to perform credit transfer. Upon receiving of credit transfer request, it creates the respective data entry in `credit` Kafka topic in AMQ Streams. 
 <br><br>It is deployed as **creditservice** on OpenShift. It provides the following REST interface:
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**POST** `ws/pg/credits`
-
+<br><br>
 * **AMQ Streams**
 <br>AMQ Streams is Red Hat commercial version of Apache Kafka based on Strimzi. It provides an agile and high performance event messaging platform on OpenShift. In this demo, there will be 2 Kafka topics created to demonstrate the credit transfer events and the correlation of credit account balance.
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;`credit` Kafka topic keeps the credit event data sent by the **Credit Service**. It will be consumed by **Event Correlator**.
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;`creidt-response` Kafka topic keeps the correlated / credit transfer history. This event data is sent by the **Event Correlator** once the credit balance for each source account and target account is updated. This will be picked up later by **MongoDB Kafka Connect**.
-
+<br><br>
 * **Event Correlator**
 <br>**Event Correlator** is a microservice developed in SpringBoot. It listens to the new credit event data in `credit` Kafka topic and perform the necessary account balance update to the source account and target account by calling the **Account Service** REST API.
 <br>Once the account balance is updated in the the respective accounts. It will create an event entry in `credit-response` Kafka topic containing the detail of the transction history.
-
+<br><br>
 * **MongoDB Kafka Connect**
 This is a MongoDB Kafka Connect that listen to the new event data entry in `credit-response` Kafka topic and create an transaction history entry in the **Credit Response DB** (MongoDB).
-
+<br><br>
 * **RHSSO**
 Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to protect and enable web applications and microservices with many industry security standards. Freeing the developers from these challenges tasks to fully focus on developing the application logic.  
 <br>
@@ -85,7 +84,7 @@ A PaymentGateway security realm is created by the installation script with the f
 
 ![RHSSO Client Settings](images/rhsso_client_settings.png)
 ![RHSSO Users](images/rhsso_users.png)
-
+<br><br>
 ## How to Install The Demo
 
 ### Pre-Requisitions
