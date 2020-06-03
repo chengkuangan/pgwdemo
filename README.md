@@ -16,10 +16,9 @@ All the following components are deployed automatically and configured properly 
 As the demo grows over time, the number of microservices also increased. This sections outlines the functionality and roles of each of this component.
 
 * **CustomerUI**
-<br>
-CustomerUI is developed in NodeJs framework. It provides the UI to demo credit transfer from one account to the other account. There are 2 demo accounts created by the demo installation script:
+<br>CustomerUI is developed in NodeJs framework. It provides the UI to demo credit transfer from one account to the other account. There are 2 demo accounts created by the demo installation script:
 <br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name**: John Doe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__Name__: John Doe<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Username**: john<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Password**: password<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Account Id**: 20191029-MY-123456789
