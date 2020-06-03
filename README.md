@@ -86,8 +86,10 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 * **AMQ Streams**
 <br>AMQ Streams is Red Hat commercial version of Apache Kafka based on Strimzi. It provides an agile and high performance event messaging platform on OpenShift. In this demo, there will be 2 Kafka topics created to demonstrate the credit transfer events and the correlation of credit account balance.
 <br>
+
 &nbsp;&nbsp;&nbsp;&nbsp;`credit` Kafka topic keeps the credit event data sent by the **Credit Service**. It will be consumed by **Event Correlator**.
 <br>
+
 &nbsp;&nbsp;&nbsp;&nbsp;`creidt-response` Kafka topic keeps the correlated / credit transfer history. This event data is sent by the **Event Correlator** once the credit balance for each source account and target account is updated. This will be picked up later by **MongoDB Kafka Connect**.
 <br><br>
 
@@ -97,11 +99,11 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 <br><br>
 
 * **MongoDB Kafka Connect**
-This is a MongoDB Kafka Connect that listen to the new event data entry in `credit-response` Kafka topic and create an transaction history entry in the **Credit Response DB** (MongoDB).
+<br>This is a MongoDB Kafka Connect that listen to the new event data entry in `credit-response` Kafka topic and create an transaction history entry in the **Credit Response DB** (MongoDB).
 <br><br>
 
 * **RHSSO**
-Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to protect and enable web applications and microservices with many industry security standards. Freeing the developers from these challenges tasks to fully focus on developing the application logic.  
+<br>Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to protect and enable web applications and microservices with many industry security standards. Freeing the developers from these challenges tasks to fully focus on developing the application logic.  
 <br>
 A PaymentGateway security realm is created by the installation script with the following details:
 
