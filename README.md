@@ -34,8 +34,12 @@ The CustomerUI service is deployed with name as **customer-ui** on OpenShift. It
 <br>Customer Service is developed in Red Hat Fuse. This service provide CustomerUI a single API for CRUD operations whichever applicable. At the current demo, it is only provides GET operation to retrieve account profile and account balance information. It provides a single API call to retrieve customer account profile and account balance from Account Profile Service and Account Service, and merges these data from 2 separate locations and return the information in one single JSON format.
 <br><br>
 The Customer Service is deployed with name as **customerservice** on OpenShift. It serves the REST at paths
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/{accountId}`
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/all`
+<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/{accountId}`
+<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/all`
 <br><br>The following shows the Camel context diagram of the Fuse implementation.
 
 ![Customer Service Fuse Camel Context Diagram](images/customerservice_camel_diagram.png)
@@ -61,15 +65,21 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 <br>Account Profile Service provides REST interface access to customer account profile information. It retrives customer account profile stored in the Account Profile DB (MongoDB).
 <br><br>It is developed in SpringBoot and deployed as **accountprofile** on OpenShift. It provides the following REST interfaces:
 <br>
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/account/{accountId}`
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/account/all`
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**POST** `/ws/pg/account`
+<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/account/all`
+<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**POST** `/ws/pg/account`
 <br><br>
 
 * **Credit Service**
 <br>Credit Service is developed in NodeJs and provides REST API for CustomerUI to perform credit transfer. Upon receiving of credit transfer request, it creates the respective data entry in `credit` Kafka topic in AMQ Streams. 
 <br><br>It is deployed as **creditservice** on OpenShift. It provides the following REST interface:
 <br>
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**POST** `ws/pg/credits`
 <br><br>
 
