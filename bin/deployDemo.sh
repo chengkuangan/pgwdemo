@@ -7,7 +7,7 @@
 ### 
 ########################################################################################################################
 
-APPS_NAMESPACE="pg-gw"
+APPS_NAMESPACE="paygate"
 KAFKA_NAMESPACE=$APPS_NAMESPACE
 KAFKA_CLUSTER_NAME="kafka-cluster"
 APPS_PROJECT_DISPLAYNAME="Payment Gateway"
@@ -562,15 +562,15 @@ read bc
 createNamespaces
 deployKafka
 deployCRMDB
-postDeployCreditResponseMongoDBConfig
 deployKafkaConnect
-configureKafkaConnect4CRMDB
 deployAccountService
 deployCreditService
 deployEventCorrelator
 deployAccountProfile
 deployCustomerCamelService
 deployCustomerUI
+postDeployCreditResponseMongoDBConfig
+configureKafkaConnect4CRMDB
 importSampleData
 deployRHSSO
 removeTempDirs
