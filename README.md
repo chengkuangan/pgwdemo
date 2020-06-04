@@ -48,7 +48,7 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 <br><br>
 
 * **Account Service**
-<br>Account Service provides REST interface to access and retrieve the latest account balance information from the Account Balance DB (MongoDB). The database starts with balance of $250 for John Doe and $150 for Jenny Doe.
+<br>Account Service provides REST interfaces to access and retrieve the latest account balance information from the Account Balance DB (MongoDB). The database starts with balance of $250 for John Doe and $150 for Jenny Doe.
 <br><br>It is implemented in SpringBoot, and deployed as **accountservice** on OpenShift. It serves the following REST interfaces:
 <br>
 
@@ -65,7 +65,7 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 <br><br>
 
 * **Account Profile Service**
-<br>Account Profile Service provides REST interfaces to customer account profile information. It retrives customer account profile stored in the Account Profile DB (MongoDB).
+<br>Account Profile Service provides REST interfaces to customer account profile information. It retrieves customer account profile stored in the Account Profile DB (MongoDB).
 <br><br>It is implemented in SpringBoot and deployed as **accountprofile** on OpenShift. It provides the following REST interfaces:
 <br>
 
@@ -120,7 +120,7 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 * You will need to have jq command line install on your PC. Please proceed to download and install from https://stedolan.github.io/jq/. Make sure the executable is configured at PATH variable and accessible from command line.
 * You should have Red Hat AMQ Streams Operator installed by your cluster-admin. For simplicity, install the operator for all namespaces.
 * You need to have access to Red Hat website to download [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams)
-* You need logon to OpenShift with a user before running the installation secipt. Non-admin user is fine.
+* You need to logon to OpenShift with a user before running the installation secipt. Non-admin user is fine.
 
 ### Installation Steps
 
@@ -221,4 +221,4 @@ cd bin
 ```
 ## Additional Information
 
-* Refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement some of the components that are used in this demo. Thought the codes on this article may be outdated but it provides some well documented detail to get started.
+* Refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement some of the components that are used in this demo. Although the codes on this article may be outdated but it provides some well documented detail to get started.

@@ -37,7 +37,7 @@ function init(){
         exit 0
     fi
     echo
-    echo "Creating temporary directory ../tmp "
+    echo "--> Creating temporary directory ../tmp "
     mkdir ../tmp
 }
 
@@ -171,7 +171,7 @@ function postDeployCreditResponseMongoDBConfig(){
     echo
     echo "--> Perfoming post deployment configuration ... "
     echo 
-    echo "--> Patching  Credit Response Mongodb ..."
+    echo "--> Patching Credit Response Mongodb ..."
     # CREDITRESPONSE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep $CREDITRESPONSE_MONGODB_NAME.[0-9].[^deploy])"
     CREDITRESPONSE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep creditresponse-[0-9] | grep -v creditresponse-[0-9]-deploy)"
     # oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n payment-gateway | grep creditresponse.[0-9].[^deploy]
@@ -263,7 +263,7 @@ function deployRHSSO(){
 
     mkdir ../tmp/sso
     echo
-    echo "--> Generating required certs and keystores for RHSSO ..."
+    echo "Generating required certs and keystores for RHSSO ..."
     echo
     openssl req -new -newkey rsa:4096 -x509 -keyout ../tmp/sso/xpaas.key -out ../tmp/sso/xpaas.crt -passout pass:openshift -days 365 -subj "/CN=xpaas-sso-demo.ca"
     keytool -genkeypair -keyalg RSA -keysize 2048 -dname "CN=secure-sso-chgan-rhsso.apps.ocpcluster1.gemsdemolab.com" -alias jboss -storepass mykeystorepass -keystore ../tmp/sso/keystore.jks
@@ -275,13 +275,13 @@ function deployRHSSO(){
     keytool -import -file ../tmp/sso/xpaas.crt -alias xpaas.ca -keystore ../tmp/sso/truststore.jks -noprompt -trustcacerts -storepass mykeystorepass
     
     echo
-    echo "--> Creating secret for RHSSO ..."
+    echo "Creating secret for RHSSO ..."
     echo
     oc create secret generic sso-app-secret --from-file=../tmp/sso/keystore.jks --from-file=../tmp/sso/jgroups.jceks --from-file=../tmp/sso/truststore.jks
     oc secrets link default sso-app-secret
 
     echo
-    echo "--> Deploying RHSSO using template ..."
+    echo "Deploying RHSSO using template ..."
     echo
     oc new-app --template=sso73-https -n $RHSSO_NAMESPACE \
     -p APPLICATION_NAME=$SSO_APPNAME \
@@ -304,7 +304,7 @@ function deployRHSSO(){
     #oc new-app --template=sso73-https -n $RHSSO_NAMESPACE -p APPLICATION_NAME=$SSO_APPNAME -p SSO_ADMIN_USERNAME=$SSO_ADMIN_USERNAME -p SSO_ADMIN_PASSWORD=$SSO_ADMIN_PASSWORD
     
     echo
-    echo "--> Configure RHSSO PaymentGateway Realms..."
+    echo "Configure RHSSO PaymentGateway Realms..."
     echo
 
     SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-[0-9] | grep -v $SSO_APPNAME-[0-9]-deploy)"
@@ -349,7 +349,7 @@ function deployRHSSO(){
 # ----- Build and deploy Account Service
 function deployAccountService(){
     echo
-    echo "Deploying Account Service and DB Service ... "
+    echo "--> Deploying Account Service and DB Service ... "
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountservice-templates.yaml
@@ -362,7 +362,7 @@ function deployAccountService(){
 # ----- Build and deploy Credit Service
 function deployCreditService(){
     echo
-    echo "Deploying Credit Services ... "
+    echo "--> Deploying Credit Services ... "
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/creditservice-template.json -p KAFKA_BOOTSTRAP_SERVER=$KAFKA_CLUSTER_NAME-kafka-bootstrap:9092
@@ -376,7 +376,7 @@ function deployCreditService(){
 function deployEventCorrelator(){
 
     echo
-    echo "Deploying Event Correlator Services ... "
+    echo "--> Deploying Event Correlator Services ... "
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/eventcorrelator-templates.yaml \
@@ -395,7 +395,7 @@ function deployEventCorrelator(){
 function deployAccountProfile(){
 
     echo
-    echo "Deploying Account Profile services ... "
+    echo "--> Deploying Account Profile services ... "
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountprofile-templates.yaml
@@ -409,7 +409,7 @@ function deployAccountProfile(){
 function deployCustomerCamelService(){
 
     echo
-    echo "Deploying Customer Camel Services ... "
+    echo "--> Deploying Customer Camel Services ... "
     echo 
 
     
@@ -417,7 +417,7 @@ function deployCustomerCamelService(){
     cd ../tmp/customerservice
 
     # The OCP Deployment settings is in fabric8/deployment.xml
-    #oc project $APPS_NAMESPACE
+    oc project $APPS_NAMESPACE
     #mvn clean install fabric8:deploy -Dfabric8.deploy.createExternalUrls=true fabric8:log 
     mvn clean install fabric8:deploy -Dfabric8.deploy.createExternalUrls=false -Dopenshift.namespace=$APPS_NAMESPACE
     #mvn -DCUST_PROFILE_HOST=accountprofile -DCUST_PROFILE_PORT=8080 -DACC_SERVICE_HOST=accountservice -DACC_SERVICE_PORT=8080 -DSERVICE_PORT=8080 clean install fabric8:deploy -Dfabric8.deploy.createExternalUrls=true fabric8:log 
@@ -428,7 +428,7 @@ function deployCustomerCamelService(){
 # ----- Build and deploy Customer UI
 function deployCustomerUI(){
     echo
-    echo "Deploying Customer UI ... "
+    echo "--> Deploying Customer UI ... "
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true \
@@ -448,16 +448,8 @@ function deployCustomerUI(){
 function importSampleData(){
    
     echo
-    echo "Importing demo data for AccountService mongodb ... "
+    echo "--> Importing demo data for AccountService mongodb ... "
     echo
-
-    echo
-    echo "---> Current Directory ... "
-    echo
-    pwd
-
-    ls ../tmp/accountservice/src/main/resources/
-    ls ../tmp/accountprofile/src/main/resources/
 
     ACCOUNT_SERVICE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep accountservice-mongodb-[0-9] | grep -v accountservice-mongodb-[0-9]-deploy)"
     echo "Waiting for POD to to be created ... POD Name: $ACCOUNT_SERVICE_MONGODB_POD_NAME"
@@ -482,7 +474,7 @@ function importSampleData(){
     oc -n $APPS_NAMESPACE exec $ACCOUNT_SERVICE_MONGODB_POD_NAME -- mongoimport --db accountservice --collection balance --authenticationDatabase accountservice --username accountservice --password accountservice --drop --file /tmp/sampledata.json
 
     echo
-    echo "Importing demo data for AccountProfile mongodb ... "
+    echo "--> Importing demo data for AccountProfile mongodb ... "
     echo
 
     ACCOUNT_PROFILE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep accountprofile-mongodb-[0-9] | grep -v accountprofile-mongodb-[0-9]-deploy)"
@@ -511,6 +503,9 @@ function importSampleData(){
 
 # ----- Remove all tmp content after completed.
 function removeTempDirs(){
+    echo
+    echo "--> Removing tmp directory ... "
+    echo
     rm -rf ../tmp
 }
 
@@ -570,7 +565,6 @@ deployCRMDB
 postDeployCreditResponseMongoDBConfig
 deployKafkaConnect
 configureKafkaConnect4CRMDB
-deployRHSSO
 deployAccountService
 deployCreditService
 deployEventCorrelator
@@ -578,4 +572,5 @@ deployAccountProfile
 deployCustomerCamelService
 deployCustomerUI
 importSampleData
-#removeTempDirs
+deployRHSSO
+removeTempDirs
