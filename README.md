@@ -121,6 +121,7 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 * You should have Red Hat AMQ Streams Operator installed by your cluster-admin. For simplicity, install the operator for all namespaces.
 * You need to have access to Red Hat website to download [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams)
 * You need to logon to OpenShift with a user before running the installation secipt. Non-admin user is fine.
+* You need to have openssl and keytool installed on your PC. The installer uses openssl and keytool to automate the RHSSO certs and keys creations.
 
 ### Installation Steps
 
