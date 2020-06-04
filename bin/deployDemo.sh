@@ -451,6 +451,14 @@ function importSampleData(){
     echo "Importing demo data for AccountService mongodb ... "
     echo
 
+    echo
+    echo "---> Current Directory ... "
+    echo
+    pwd
+
+    ls ../tmp/accountservice/src/main/resources/
+    ls ../tmp/accountprofile/src/main/resources/
+
     ACCOUNT_SERVICE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep accountservice-mongodb-[0-9] | grep -v accountservice-mongodb-[0-9]-deploy)"
     echo "Waiting for POD to to be created ... POD Name: $ACCOUNT_SERVICE_MONGODB_POD_NAME"
     while [ "$ACCOUNT_SERVICE_MONGODB_POD_NAME" = "" ]
@@ -570,4 +578,4 @@ deployAccountProfile
 deployCustomerCamelService
 deployCustomerUI
 importSampleData
-removeTempDirs
+#removeTempDirs

@@ -49,7 +49,7 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 
 * **Account Service**
 <br>Account Service provides REST interface to access and retrieve the latest account balance information from the Account Balance DB (MongoDB). The database starts with balance of $250 for John Doe and $150 for Jenny Doe.
-<br><br>It is developed in SpringBoot, and deployed as **accountservice** on OpenShift. It serves the REST requests at the following paths:
+<br><br>It is implemented in SpringBoot, and deployed as **accountservice** on OpenShift. It serves the following REST interfaces:
 <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/balance/{accountId}`
@@ -65,8 +65,8 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 <br><br>
 
 * **Account Profile Service**
-<br>Account Profile Service provides REST interface access to customer account profile information. It retrives customer account profile stored in the Account Profile DB (MongoDB).
-<br><br>It is developed in SpringBoot and deployed as **accountprofile** on OpenShift. It provides the following REST interfaces:
+<br>Account Profile Service provides REST interfaces to customer account profile information. It retrives customer account profile stored in the Account Profile DB (MongoDB).
+<br><br>It is implemented in SpringBoot and deployed as **accountprofile** on OpenShift. It provides the following REST interfaces:
 <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/account/{accountId}`
@@ -79,7 +79,7 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 <br><br>
 
 * **Credit Service**
-<br>Credit Service is developed in NodeJs and provides REST API for CustomerUI to perform credit transfer. Upon receiving of credit transfer request, it creates the respective data entry in `credit` Kafka topic in AMQ Streams. 
+<br>Credit Service is implemented in NodeJs and provides REST interfaces for CustomerUI to perform credit transfer. Upon receiving of credit transfer request, it creates the respective data entry in `credit` Kafka topic in AMQ Streams. 
 <br><br>It is deployed as **creditservice** on OpenShift. It provides the following REST interface:
 <br>
 
@@ -93,20 +93,20 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 &nbsp;&nbsp;&nbsp;&nbsp;`credit` Kafka topic keeps the credit event data sent by the **Credit Service**. It will be consumed by **Event Correlator**.
 <br>
 
-&nbsp;&nbsp;&nbsp;&nbsp;`creidt-response` Kafka topic keeps the correlated / credit transfer history. This event data is sent by the **Event Correlator** once the credit balance for each source account and target account is updated. This will be picked up later by **MongoDB Kafka Connect**.
+&nbsp;&nbsp;&nbsp;&nbsp;`credit-response` Kafka topic keeps the correlated / credit transfer history. This event data is sent by the **Event Correlator** once the credit balance for each source account and target account is updated. This will be picked up later by **MongoDB Kafka Connect**.
 <br><br>
 
 * **Event Correlator**
-<br>**Event Correlator** is a microservice developed in SpringBoot. It listens to the new credit event data in `credit` Kafka topic and perform the necessary account balance update to the source account and target account by calling the **Account Service** REST API.
-<br>Once the account balance is updated in the the respective accounts. It will create an event entry in `credit-response` Kafka topic containing the detail of the transction history.
+<br>**Event Correlator** is implemented in SpringBoot. It listens to the new credit event in `credit` Kafka topic and perform the necessary account balance update to the source account and target account by calling the **Account Service** REST API.
+<br>Once the account balance is updated in the the respective accounts. It will create an event entry in `credit-response` Kafka topic containing the detail of the transaction history.
 <br><br>
 
 * **MongoDB Kafka Connect**
-<br>This is a MongoDB Kafka Connect that listen to the new event data entry in `credit-response` Kafka topic and create an transaction history entry in the **Credit Response DB** (MongoDB).
+<br>This is a MongoDB Kafka Connect that listens to the new event data entry in `credit-response` Kafka topic and create an transaction history entry in the **Credit Response DB** (MongoDB).
 <br><br>
 
 * **RHSSO**
-<br>Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to protect and enable web applications and microservices with many industry security standards. Freeing the developers from these challenges tasks to fully focus on developing the application logic.  
+<br>Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to secure web applications and microservices with many industry security standards. Freeing the developers from these challenge security tasks to fully focus on developing the application logic.  
 <br>A PaymentGateway security realm is created by the installation script with the following details:<br><br>
 
 ![RHSSO Client Settings](images/rhsso_client_settings.png)
@@ -117,16 +117,16 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 
 ### Pre-Requisitions
 
-* You will need to have jq command line install on your PC. Please proceed to download and install from https://stedolan.github.io/jq/
-* You should have Red Hat AMQ Streams Operator installed by your cluser-admin. For simplicity, install the operator for all namespaces.
+* You will need to have jq command line install on your PC. Please proceed to download and install from https://stedolan.github.io/jq/. Make sure the executable is configured at PATH variable and accessible from command line.
+* You should have Red Hat AMQ Streams Operator installed by your cluster-admin. For simplicity, install the operator for all namespaces.
 * You need to have access to Red Hat website to download [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams)
-* You need to have already logon to OpenShift with a user. Non-admin user is fine.
+* You need logon to OpenShift with a user before running the installation secipt. Non-admin user is fine.
 
 ### Installation Steps
 
 1. Clone this repo into your local PC.
 
-2. Download the Red Hat [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams). Unzip the downloaded files and copy the contents to the repo directory `kafka-resources`. It should be ended with 2 folders under this directory named `examples` and `install`. 
+2. Download the Red Hat [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams). Extract the downloaded file and copy the contents to the repo directory `kafka-resources`. The result should be ended with 2 folders under this directory named `examples` and `install`. 
 
 3. Edit `kafka-resources/examples/kafka/kafka-persistent.yaml` with the following changes. 
 <br><br>Change the following with the kafka-cluster name that you prefer. 
@@ -145,9 +145,8 @@ entityOperator:
       topicMetadataMaxAttempts: 6
       image: registry.redhat.io/amq7/amq-streams-operator:1.3.0
 ```
-Some order version of the yaml file comes with the `entityOperator` stanza. So you may just modify the existing stanza according to the above example. This is also one of the reason I do not automate this part of yaml file changes in the demo installation script.
 
-The following illustrate the complete `kafka-persistent.yaml`. You may also change storage size to smaller figure since this is just a demo.
+The following illustrate the complete `kafka-persistent.yaml`. You may also change storage size to smaller figure since this is just a demo. The latest yaml file is defaulted to 100Gi.
 
 ```
 apiVersion: kafka.strimzi.io/v1beta1
@@ -215,11 +214,11 @@ spec:
   image: docker.io/chengkuan/amq-streams-kafka-connect-23:1.3.0
 ```
 
-5. Finally, at the command prompt. Make sure you login to OpenShift with the correct user and run the following to deploy the demo.
+5. Finally, run the following command to change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory.
 ```
 cd bin 
-./deployDemo.sh`
+./deployDemo.sh
 ```
 ## Additional Information
 
-* You may want to refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement most of the component that I showcase in this demo. Thought the codes on this article may be outdated but it does provide detail explaination on how to create some of the key components.
+* Refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement some of the components that are used in this demo. Thought the codes on this article may be outdated but it provides some well documented detail to get started.
