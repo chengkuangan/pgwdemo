@@ -1,0 +1,25 @@
+{
+    "accountId": "20191029-MY-123456789", 
+    "name": "John Doe",
+    "socialId": "870916071234",
+    "email": "john.doe@example.com",
+    "contactNumber" : "+60126781413",
+    "age": 43,
+    "nationality": "Malaysian",
+    "address": "88, Jalan 8888, Mountain 8, 88888 Huat, Selangor, Malaysia.",
+    "lastUpdatedDate": 1563178274158,
+    "createdDate": 1563178274158
+}
+
+{
+    "accountId": "20191029-MY-123456710", 
+    "name": "Jenny Doe",
+    "socialId": "870916075678",
+    "email": "jenny.doe@example.com",
+    "contactNumber" : "+60126781413",
+    "age": 43,
+    "nationality": "Singaporean",
+    "address": "88, Evenue 8888, 88 Hill, 88888 Huat, Singapore.",
+    "lastUpdatedDate": 1563178274158,
+    "createdDate": 1563178274158
+}

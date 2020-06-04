@@ -1,39 +1,41 @@
 # Payment Gateway Demo
 
 ## Overview
-This project using the concept of Payment Gateway to demonstrate some of the key features of Red Hat products. 
-
+This project is using the Payment Gateway use case to demonstrate some of the key features of Red Hat products. This an on-going project and will be enhanced over time to add more use cases.
+<br><br>
 The following diagram shows the demo environment created once it is installed on OpenShift.
 
 ![Demo Component Diagram](images/component_diagram.png)
+<br>
 
-This an on-going demo. It will be enhanced over time and new products will be introduced over time where new use cases are being introduced.
+### Components in The Demo
 
-### Explanation of Each Components in The Demo
+All the following components are deployed automatically and configured to allow demo can be done without any additional manual configurations. Please refer to the installation section for more details.
 
-All the following components are deployed automatically and configured properly to allow demo can be without any additional manual configurations. Please refer to the installation section for more details.
-
-As the demo grows over time, the number of microservices also increased. This sections outlines the functionality and roles of each of this component.
+The number of microservices and components will be increased over the time when new features or use cases are introduced. This sections serves the purpose of providing high level documentation on each of these components.
 
 * **CustomerUI**
-<br>CustomerUI is developed in NodeJs framework. It provides the UI to demo credit transfer from one account to the other account. There are 2 demo accounts created by the demo installation script:
-<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__Name__: John Doe<br>
+<br>CustomerUI is implemented in NodeJs framework. It provides the UI to demo credit transfer from one account to the other account. There are currently 2 demo accounts created by the demo installation script as per the following:
+<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name**: John Doe<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Username**: john<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Password**: password<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Account Id**: 20191029-MY-123456789
-<br><br>
+<br>
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name**: Jenny Doe<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Username**: jenny<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Password**: password<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Account Id**: 20191029-MY-123456710
 <br><br>
-The CustomerUI service is deployed with name as **customer-ui** on OpenShift. It is protected with Red Hat Single Sign-On (RHSSO). The respective user credentials above are created in RHSSO when the installation script is executed. Please refer the section of RHSSO for more details on this.
-<br><br>
+The CustomerUI is deployed with a name as **customer-ui** on OpenShift. It is secured with Red Hat Single Sign-On (RHSSO). The respective user credentials above are created in RHSSO when the installation script is executed. Please refer the section of RHSSO for more details on this.
+<br>
+
 * **Customer Service**
-<br>Customer Service is developed in Red Hat Fuse. This service provide CustomerUI a single API for CRUD operations whichever applicable. At the current demo, it is only provides GET operation to retrieve account profile and account balance information. It provides a single API call to retrieve customer account profile and account balance from Account Profile Service and Account Service, and merges these data from 2 separate locations and return the information in one single JSON format.
+<br>Customer Service is implemented with Red Hat Fuse. This service provides CustomerUI a single API for CRUD operations whichever applicable.<br><br>At the current demo, it provides GET operation to retrieve account profile and account balance information, with a single API call to retrieve customer account profile and account balance from Account Profile Service and Account Service. These separated data are then merged into one single JSON format.
 <br><br>
-The Customer Service is deployed with name as **customerservice** on OpenShift. It serves the REST at paths
+The Customer Service is deployed with a name as **customerservice** on OpenShift. It serves the REST at the following paths:
 <br>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**GET** `/ws/pg/customer/{accountId}`
@@ -44,6 +46,7 @@ The Customer Service is deployed with name as **customerservice** on OpenShift. 
 
 ![Customer Service Fuse Camel Context Diagram](images/customerservice_camel_diagram.png)
 <br><br>
+
 * **Account Service**
 <br>Account Service provides REST interface to access and retrieve the latest account balance information from the Account Balance DB (MongoDB). The database starts with balance of $250 for John Doe and $150 for Jenny Doe.
 <br><br>It is developed in SpringBoot, and deployed as **accountservice** on OpenShift. It serves the REST requests at the following paths:

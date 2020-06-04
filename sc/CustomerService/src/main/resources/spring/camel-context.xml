@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd     http://camel.apache.org/schema/cxf           http://camel.apache.org/schema/cxf/camel-cxf.xsd             http://camel.apache.org/schema/spring            http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <cxf:rsServer address="http://0.0.0.0:{{service.port}}/"
+        id="customerEndpoint" loggingFeatureEnabled="true" serviceClass="com.gck.demo.paymentgateway.customer.services.CustomerService">
+        <cxf:providers>
+            <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
+        </cxf:providers>
+    </cxf:rsServer>
+    <cxf:rsClient
+        address="http://{{cust.profile.host}}:{{cust.profile.port}}"
+        id="custProfileEndpoint" loggingFeatureEnabled="true" serviceClass="com.gck.demo.paymentgateway.customer.services.ProfileService">
+        <cxf:providers>
+            <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
+        </cxf:providers>
+    </cxf:rsClient>
+    <cxf:rsClient
+        address="http://{{acc.service.host}}:{{acc.service.port}}"
+        id="balanceEndpoint" loggingFeatureEnabled="true" serviceClass="com.gck.demo.paymentgateway.customer.services.BalanceService">
+        <cxf:providers>
+            <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
+        </cxf:providers>
+    </cxf:rsClient>
+    <bean
+        class="com.gck.demo.paymentgateway.customer.processors.RequestProcessor" id="requestProcessor"/>
+    <bean
+        class="com.gck.demo.paymentgateway.customer.processors.DataProcessor" id="dataProcessor"/>
+    <bean
+        class="com.gck.demo.paymentgateway.customer.processors.ErrorProcessor" id="errorProcessor"/>
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+        <route id="QueryCustInfo">
+            <from id="_from1" uri="cxfrs:bean:customerEndpoint"/>
+            <setProperty id="_PAYLOAD" propertyName="_PAYLOAD">
+                <simple>${body}</simple>
+            </setProperty>
+            <setProperty id="CUST_ID" propertyName="CUST_ID">
+                <javaScript>request.headers.get('CamelHttpPath').substring(request.headers.get('CamelHttpPath').lastIndexOf('/')+1)</javaScript>
+            </setProperty>
+            <log id="_log7" message=">>>>>>>>>>>>>>>>>>>>>> STARTS -> CUST_ID : ${exchangeProperty.CUST_ID} "/>
+            <choice id="_choice1">
+                <when id="all">
+                    <simple>${header.CamelHttpPath} contains '/all'</simple>
+                    <setProperty id="SINGLE_RECORD" propertyName="SINGLE_RECORD">
+                        <simple>false</simple>
+                    </setProperty>
+                    <log id="_log5" message=">>>>>>>>>>>>>>>>>>>>>> Choice -> all -> SINGLE_RECORD : ${exchangeProperty.SINGLE_RECORD} "/>
+                    <to id="_to8" uri="direct:RequestAll"/>
+                </when>
+                <otherwise id="_otherwise1">
+                    <setProperty id="SINGLE_RECORD1" propertyName="SINGLE_RECORD">
+                        <simple>true</simple>
+                    </setProperty>
+                    <log id="_log6" message=">>>>>>>>>>>>>>>>>>>>>> Choice -> Otherwise -> SINGLE_RECORD : ${exchangeProperty.SINGLE_RECORD} "/>
+                    <to id="_to2" uri="direct:QueryAccountProfile"/>
+                    <to id="_to4" uri="direct:QueryAccountBalance"/>
+                    <process id="processData" ref="dataProcessor"/>
+                </otherwise>
+            </choice>
+        </route>
+        <route id="RequestAccountProfile">
+            <from id="_to3" uri="direct:QueryAccountProfile"/>
+            <setHeader headerName="operationName" id="operationName1">
+                <simple>getCustomerProfile</simple>
+            </setHeader>
+            <setBody id="setParamCustId">
+                <simple>${exchangeProperty.CUST_ID}</simple>
+            </setBody>
+            <process id="request" ref="requestProcessor"/>
+            <to id="_to1" uri="cxfrs:bean:custProfileEndpoint"/>
+            <onException id="_onException1">
+                <exception>java.lang.Exception</exception>
+                <handled>
+                    <constant>true</constant>
+                </handled>
+                <setHeader headerName="errorDetail" id="errorDetail1">
+                    <simple>Failed to retrieve account profile for custId : ${exchangeProperty.CUST_ID}</simple>
+                </setHeader>
+                <to id="_to6" uri="direct:HandleError"/>
+            </onException>
+            <log id="_log3" message=">>>>>>>>>>>>>>>>>>>>>>>>>>>>> here 1 -> body : ${body}"/>
+            <choice id="_choice2">
+                <when id="_when1">
+                    <simple>${exchangeProperty.SINGLE_RECORD}</simple>
+                    <unmarshal id="_unmarshal3">
+                        <json library="Jackson" unmarshalTypeName="com.gck.demo.paymentgateway.customer.model.AccountProfile"/>
+                    </unmarshal>
+                </when>
+                <otherwise id="_otherwise2">
+                    <unmarshal id="_unmarshal1">
+                        <json library="Jackson"
+                            unmarshalTypeName="com.gck.demo.paymentgateway.customer.model.AccountProfile" useList="true"/>
+                    </unmarshal>
+                </otherwise>
+            </choice>
+            <log id="_log4" message=">>>>>>>>>>>>>>>>>>>>>>>>>>>>> here 2 : body : ${body}"/>
+            <setProperty id="CUST_PROFILES" propertyName="CUST_PROFILES">
+                <simple>${body}</simple>
+            </setProperty>
+        </route>
+        <route id="RequestAccountBalance">
+            <from id="_from2" uri="direct:QueryAccountBalance"/>
+            <setHeader headerName="operationName" id="operationName">
+                <simple>getBalance</simple>
+            </setHeader>
+            <setBody id="setParamCustId1">
+                <simple>${exchangeProperty.CUST_ID}</simple>
+            </setBody>
+            <process id="request1" ref="requestProcessor"/>
+            <to id="_to5" uri="cxfrs:bean:balanceEndpoint"/>
+            <onException id="_onException2">
+                <exception>java.lang.Exception</exception>
+                <handled>
+                    <constant>true</constant>
+                </handled>
+                <setHeader headerName="errorDetail" id="errorDetail2">
+                    <simple>Failed to retrieve account balance for custId : ${exchangeProperty.CUST_ID}</simple>
+                </setHeader>
+                <to id="_to7" uri="direct:HandleError"/>
+            </onException>
+            <unmarshal id="_unmarshal2">
+                <json library="Jackson" unmarshalTypeName="com.gck.demo.paymentgateway.customer.model.Balance"/>
+            </unmarshal>
+            <setProperty id="ACCOUNT_BALANCE" propertyName="ACCOUNT_BALANCE">
+                <simple>${body}</simple>
+            </setProperty>
+        </route>
+        <route id="HandleError">
+            <from id="_from3" uri="direct:HandleError"/>
+            <process id="processError" ref="errorProcessor"/>
+        </route>
+        <route id="RequestAllProfiles">
+            <from id="_from4" uri="direct:RequestAll"/>
+            <to id="_to9" uri="direct:QueryAccountProfile"/>
+            <setProperty id="ITERATOR" propertyName="ITERATOR">
+                <simple>${exchangeProperty.CUST_PROFILES.iterator}</simple>
+            </setProperty>
+            <loop doWhile="true" id="MultipleProfiles">
+                <simple>${exchangeProperty.ITERATOR.hasNext}</simple>
+                <setProperty id="CUST_PROF" propertyName="CUST_PROF">
+                    <simple>${exchangeProperty.ITERATOR.next}</simple>
+                </setProperty>
+                <log id="_log1" message="MultipleProfiles -> Loop -> Property : ${exchangeProperty.CUST_PROF} "/>
+                <setProperty id="CUST_ID1" propertyName="CUST_ID">
+                    <simple>${exchangeProperty.CUST_PROF.accountId}</simple>
+                </setProperty>
+                <log id="_log2" message="CUST_ID -> ${exchangeProperty.CUST_ID}"/>
+                <to id="_to10" uri="direct:QueryAccountBalance"/>
+                <process id="processData1" ref="dataProcessor"/>
+            </loop>
+        </route>
+    </camelContext>
+</beans>
