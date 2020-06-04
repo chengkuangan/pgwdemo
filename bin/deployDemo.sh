@@ -200,20 +200,20 @@ function deployKafkaConnect(){
     echo
     echo "--> Deploy Kafka Connect ..."
     echo "Waiting for Kafka to be ready ..."
-    KAFKA_POD_READY="$(oc get pod $APPS_NAMESPACE-kafka-cluster-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
+    KAFKA_POD_READY="$(oc get pod $KAFKA_CLUSTER_NAME-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
     while [ $? -ne 0 ]
         do
-            echo "$APPS_NAMESPACE-kafka-cluster-kafka-0 is not created yet ... Waiting ... "
+            echo "$KAFKA_CLUSTER_NAME-kafka-0 is not created yet ... Waiting ... "
             sleep 10
-            KAFKA_POD_READY="$(oc get pod $APPS_NAMESPACE-kafka-cluster-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
+            KAFKA_POD_READY="$(oc get pod $KAFKA_CLUSTER_NAME-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
         done
-    echo "POD: $APPS_NAMESPACE-kafka-cluster-kafka-0, ready: $KAFKA_POD_READY"
+    echo "POD: $KAFKA_CLUSTER_NAME-kafka-0, ready: $KAFKA_POD_READY"
     # oc get pod pg-kafka-cluster-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n pg
     while [ "$KAFKA_POD_READY" = "false" ]
         do  
             sleep 10
-            KAFKA_POD_READY="$(oc get pod $APPS_NAMESPACE-kafka-cluster-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
-            echo "POD: $APPS_NAMESPACE-kafka-cluster-kafka-0, ready: $KAFKA_POD_READY"
+            KAFKA_POD_READY="$(oc get pod $KAFKA_CLUSTER_NAME-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
+            echo "POD: $KAFKA_CLUSTER_NAME-kafka-0, ready: $KAFKA_POD_READY"
         done
     oc apply -f ../kafka-resources/examples/kafka-connect/kafka-connect.yaml -n $APPS_NAMESPACE
 }
@@ -514,7 +514,6 @@ function readInput(){
     do  
         echo "Namespace[$APPS_NAMESPACE]:"
         read INPUT_VALUE
-        echo "'"$INPUT_VALUE"'"
         if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
             APPS_NAMESPACE="$INPUT_VALUE"
         fi
