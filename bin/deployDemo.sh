@@ -496,8 +496,8 @@ function importSampleData(){
         done
     echo
     echo "Importing sample data into $ACCOUNT_PROFILE_MONGODB_POD_NAME ..."
-    oc cp ../tmp/accountprofile/src/main/resources/sampledata.json $ACCOUNT_PROFILE_MONGODB_POD_NAME:/tmp/
-    oc exec $ACCOUNT_PROFILE_MONGODB_POD_NAME -- mongoimport --db accountprofile --collection account --authenticationDatabase accountprofile --username accountprofile --password accountprofile --drop --file /tmp/sampledata.json
+    oc -n $APPS_NAMESPACE cp ../tmp/accountprofile/src/main/resources/sampledata.json $ACCOUNT_PROFILE_MONGODB_POD_NAME:/tmp/
+    oc -n $APPS_NAMESPACE exec $ACCOUNT_PROFILE_MONGODB_POD_NAME -- mongoimport --db accountprofile --collection account --authenticationDatabase accountprofile --username accountprofile --password accountprofile --drop --file /tmp/sampledata.json
 
 }   
 
