@@ -557,18 +557,18 @@ echo "Press ENTER (OR Ctrl-C to cancel) to proceed..."
 read bc
 
 #updateKafkaResourcesFiles
-#createNamespaces
-#deployKafka
-#deployCRMDB
-#postDeployCreditResponseMongoDBConfig
-#deployKafkaConnect
-#configureKafkaConnect4CRMDB
-#deployRHSSO
-#deployAccountService
-#deployCreditService
-#deployEventCorrelator
-#deployAccountProfile
-#deployCustomerCamelService
-#deployCustomerUI
-#importSampleData
-#removeTempDirs
+createNamespaces
+deployKafka
+deployCRMDB
+postDeployCreditResponseMongoDBConfig
+deployKafkaConnect
+configureKafkaConnect4CRMDB
+deployRHSSO
+deployAccountService
+deployCreditService
+deployEventCorrelator
+deployAccountProfile
+deployCustomerCamelService
+deployCustomerUI
+importSampleData
+removeTempDirs
