@@ -14,7 +14,11 @@ The following diagram shows the demo environment created once it is installed on
 * Simplified installation steps.
 
 ### Product Vesions
-// TODO
+These are product version when this demo is developed. However it should work on other versions provided the products required are supported / can be technically deployed on the OpenShift version.
+
+* OpenShift Container Platform 4.*
+* Prometheus Operator Community 0.32.0
+* Red Hat AMQ Streams Operator 1.4.1
 
 ### Components in The Demo
 
@@ -150,6 +154,7 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 <br>
 * Red Hat AMQ Streams Operator
 * Prometheus Operator
+<br><br>Please refer to [Deploying Promethues and Grafana on OpenShift](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for more detail.
 
 4. Finally, run the following command to change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory. Follow through the installation prompts.
 ```
@@ -209,3 +214,4 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 * Refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement some of the components that are used in this demo. Although the codes on this article may be outdated but it provides some well documented detail to get started.
 * [Implementing Camel Integration Service with Apache Camel](http://braindose.blog/2020/06/05/implementing-integration-service-with-red-hat-fuse-apache-camel/).
 * [How to Create A MongoDB Kafka Connect Container Image for OpenShift](http://braindose.blog/2020/06/11/how-create-mongodb-kafka-connect-container-openshift/)
+* [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/)
