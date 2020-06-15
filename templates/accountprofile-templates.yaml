@@ -126,6 +126,10 @@ objects:
     labels:
       app: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
+  annotations:
+      prometheus.io/path: /actuator/prometheus
+      prometheus.io/port: '8080'
+      prometheus.io/scrape: 'true'  
   spec:
     ports:
     - port: 8080
@@ -196,7 +200,7 @@ objects:
                 key: mongodb.database
                 name: ${APPLICATION_NAME}
           - name: SERVER_PORT
-            value: ${SERVER_PORT}      
+            value: "8080"
           image: ${APPLICATION_NAME}:latest
           imagePullPolicy: IfNotPresent
           name: ${APPLICATION_NAME}
@@ -331,8 +335,8 @@ parameters:
   displayName: Maven Repo URL
   name: MAVEN_MIRROR_URL
   required: false
-- description: The default port the service listen at
-  displayName: Service Port
-  name: SERVER_PORT
-  value: "8080"
-  required: true  
+#- description: The default port the service listen at
+#  displayName: Service Port
+#  name: SERVER_PORT
+#  value: "8080"
+#  required: true  

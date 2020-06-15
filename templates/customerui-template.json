@@ -27,7 +27,9 @@
             "metadata": {
                 "name": "${NAME}",
                 "annotations": {
-                    "description": "Exposes and load balances the application pods"
+                    "description": "Exposes and load balances the application pods",
+                    "prometheus.io/port": "8080",
+                    "prometheus.io/scrape": "true"
                 }
             },
             "spec": {
@@ -202,7 +204,7 @@
                                     },
                                     {
                                         "name": "PORT",
-                                        "value": "${PORT}"
+                                        "value": "8080"
                                     },
                                     {
                                         "name": "RHSSO_URL",
@@ -269,13 +271,6 @@
             "description": "The Customer service complete url with port. This is the Camel service",
             "required": true,
             "value": "http://customerservice:8080/ws/pg/customer"
-        },
-        {
-            "name": "PORT",
-            "displayName": "Server Port",
-            "description": "The port this customer ui is listening to.",
-            "required": true,
-            "value": "8080"
         },
         {
             "name": "RHSSO_URL",

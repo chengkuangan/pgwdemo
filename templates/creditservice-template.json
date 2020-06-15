@@ -27,7 +27,9 @@
             "metadata": {
                 "name": "${NAME}",
                 "annotations": {
-                    "description": "Exposes and load balances the application pods"
+                    "description": "Exposes and load balances the application pods",
+                    "prometheus.io/port": "8080",
+                    "prometheus.io/scrape": "true"
                 }
             },
             "spec": {
@@ -195,6 +197,10 @@
                                     {
                                         "name": "KAFKA_BOOTSTRAP_SERVER",
                                         "value": "${KAFKA_BOOTSTRAP_SERVER}"
+                                    },
+                                    {
+                                        "name": "PORT",
+                                        "value": "8080"
                                     }
                                 ]
                             }

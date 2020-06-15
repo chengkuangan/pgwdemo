@@ -25,14 +25,15 @@ app.use(bodyParser.json());
 var port = process.env.PORT || 8080;
 
 // Send message for default URL
-app.get('/', (req, res) => res.send('Hello World with Express'));
+//app.get('/', (req, res) => res.send('This is Credit Service API.'));
 
 // Use Api routes in the App
-app.use('/ws/pg', apiRoutes);
+//app.use('/ws/pg', apiRoutes);
+app.use('/', apiRoutes);
 // Launch app to listen to specified port
 
 app.listen(port, function () {
-    console.log("Running Credit Transfer on port " + port);
+    console.log("Credit Service is listening on port " + port);
 });
 
 module.exports = app

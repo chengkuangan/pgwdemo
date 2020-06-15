@@ -8,6 +8,14 @@ The following diagram shows the demo environment created once it is installed on
 ![Demo Component Diagram](images/component_diagram.png)
 <br>
 
+### Quick View of Major Changes
+
+* Added Promethues and Grafana monitoring.
+* Simplified installation steps.
+
+### Product Vesions
+// TODO
+
 ### Components in The Demo
 
 All the following components are deployed automatically and configured to allow demo can be done without any additional manual configurations. Please refer to the installation section for more details.
@@ -46,7 +54,8 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 
 ![Customer Service Fuse Camel Context Diagram](images/customerservice_camel_diagram.png)
 <br><br>
-
+You may refer to this article for the detail of the [Cutomer Service Camel service implementation](http://braindose.blog/2020/06/05/implementing-integration-service-with-red-hat-fuse-apache-camel/).
+<br><br>
 * **Account Service**
 <br>Account Service provides REST interfaces to access and retrieve the latest account balance information from the Account Balance DB (MongoDB). The database starts with balance of $250 for John Doe and $150 for Jenny Doe.
 <br><br>It is implemented in SpringBoot, and deployed as **accountservice** on OpenShift. It serves the following REST interfaces:
@@ -104,6 +113,8 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 * **MongoDB Kafka Connect**
 <br>This is a MongoDB Kafka Connect that listens to the new event data entry in `credit-response` Kafka topic and create an transaction history entry in the **Credit Response DB** (MongoDB).
 <br><br>
+Please refer to this article for detail of [How to Create A MongoDB Kafka Connect Container Image for OpenShift](http://braindose.blog/2020/06/11/how-create-mongodb-kafka-connect-container-openshift/).
+<br><br>
 
 * **RHSSO**
 <br>Red Hat Single Sign-On (RHSSO) is a lighweight and feature rich SSO solution based on Keycloak. It provides easy and quick approach to secure web applications and microservices with many industry security standards. Freeing the developers from these challenge security tasks to fully focus on developing the application logic.  
@@ -119,107 +130,82 @@ The Customer Service is deployed with a name as **customerservice** on OpenShift
 
 * You will need to have jq command line install on your PC. Please proceed to download and install from https://stedolan.github.io/jq/. Make sure the executable is configured at PATH variable and accessible from command line.
 * You should have Red Hat AMQ Streams Operator installed by your cluster-admin. For simplicity, install the operator for all namespaces.
+* You need to have oc command line tool installed on your local PC.
 * You need to have access to Red Hat website to download [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams)
-* You need to logon to OpenShift with a user before running the installation secipt. Non-admin user is fine.
+* You need to logon to OpenShift with **cluster-admin** role user before running the installation secipt. Typical use case you will not need to use cluster-admin role for apps and container deployment. But it is required because we automate lots of steps in the installer thats some of the steps require cluster-admin access to execute.
 * You need to have openssl and keytool installed on your PC. The installer uses openssl and keytool to automate the RHSSO certs and keys creations.
+* You should have Prometheus Operator installed.
+* Pre-created the necessary OCP projects for RHSSO and the application project.
 
 ### Installation Steps
 
 1. Clone this repo into your local PC.
 
-2. Download the Red Hat [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams). Extract the downloaded file and copy the contents to the repo directory `kafka-resources`. The result should be ended with 2 folders under this directory named `examples` and `install`. 
+2. Create the required OCP projects to deploy this demo:
+<br>
+* Project for RHSSO. Example: `rhsso`
+* Project for the demo applications and containers. Example: `paygate`
 
-3. Edit `kafka-resources/examples/kafka/kafka-persistent.yaml` with the following changes. 
-<br><br>Change the following with the kafka-cluster name that you prefer. 
+3. With cluster-admin role, deploy the following operators:
+<br>
+* Red Hat AMQ Streams Operator
+* Prometheus Operator
 
-```
-metadata:
-  name: kafka-cluster
-```
-Add the following at the end of the `kafka-persistent.yaml` file and change the `watchedNamespace` with the OpenShift project name and suffix the value with your OpenShift username (you can retrieve this with `oc whoami` command). In this example my username is `chgan`, OpenShift project name is `pg-gw`, so the value for `watchedNamespace` will be `chgan-pg-gw`
-```
-entityOperator:
-    topicOperator:
-      watchedNamespace: chgan-pg-gw
-      reconciliationIntervalSeconds: 90
-      zookeeperSessionTimeoutSeconds: 20
-      topicMetadataMaxAttempts: 6
-      image: registry.redhat.io/amq7/amq-streams-operator:1.3.0
-```
-
-The following illustrate the complete `kafka-persistent.yaml`. You may also change storage size to smaller figure since this is just a demo. The latest yaml file is defaulted to 100Gi.
-
-```
-apiVersion: kafka.strimzi.io/v1beta1
-kind: Kafka
-metadata:
-  name: kafka-cluster
-spec:
-  kafka:
-    version: 2.4.0
-    replicas: 3
-    listeners:
-      plain: {}
-      tls: {}
-    config:
-      offsets.topic.replication.factor: 3
-      transaction.state.log.replication.factor: 3
-      transaction.state.log.min.isr: 2
-      log.message.format.version: "2.4"
-    storage:
-      type: jbod
-      volumes:
-      - id: 0
-        type: persistent-claim
-        size: 10Gi
-        deleteClaim: false
-  zookeeper:
-    replicas: 3
-    storage:
-      type: persistent-claim
-      size: 10Gi
-      deleteClaim: false
-  entityOperator:
-    topicOperator:
-      watchedNamespace: chgan-pg-gw
-      reconciliationIntervalSeconds: 90
-      zookeeperSessionTimeoutSeconds: 20
-      topicMetadataMaxAttempts: 6
-      image: registry.redhat.io/amq7/amq-streams-operator:1.3.0
-```
-
-4. Edit the `kafka-resources/examples/kafka-connect/kafka-connect.yaml` with the following example. 
-<br><br>Change `metadata->name` to `mongodb-connect-cluster`.
-<br><br>Notice that the `bootstrapServers: kafka-cluster-kafka-bootstrap:9093` and `secretName: kafka-cluster-cluster-ca-cert`
-<br>From the earlier example, the Kafka Cluster name is `kafka-cluster`, so our `bootstrapServers` and `secretName` will be prefixed with `kafka-cluster`
-<br><br>Make sure you are using this value: `image: docker.io/chengkuan/amq-streams-kafka-connect-23:1.3.0`. This is the MongoDB Kafka Connect docker image that I had created for this demo.
-
-```
-apiVersion: kafka.strimzi.io/v1beta1
-kind: KafkaConnect
-metadata:
-  name: mongodb-connect-cluster
-#  annotations:
-#  # use-connector-resources configures this KafkaConnect
-#  # to use KafkaConnector resources to avoid
-#  # needing to call the Connect REST API directly
-#    strimzi.io/use-connector-resources: "true"
-spec:
-  version: 2.4.0
-  replicas: 1
-  bootstrapServers: kafka-cluster-kafka-bootstrap:9093
-  tls:
-    trustedCertificates:
-      - secretName: kafka-cluster-cluster-ca-cert
-        certificate: ca.crt
-  image: docker.io/chengkuan/amq-streams-kafka-connect-23:1.3.0
-```
-
-5. Finally, run the following command to change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory.
+4. Finally, run the following command to change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory. Follow through the installation prompts.
 ```
 cd bin 
-./deployDemo.sh
+./deployDemo.sh -i
 ```
+
+## Post Installation Configurations
+
+### Enable Grafana for Kafka
+
+1. Once the Grafana is deployed and running, proceed to login with the initial default username and password (`admin/admin`).
+
+2. Create the data source for Prometheus.
+
+3. Import the sample dashboard from the following file in the cloned project on your local PC.
+```
+templates/grafana/grafanadashboard_payment_gateway_overview.json
+```
+Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#assembly-metrics-grafana-str) for more details.
+
+4. There are pre-defined AMQ Streams dashboard examples which you can import into the Grafana. These sample JSON files are located in `templates/kafka/metrics/grafana-dashboards`
+
+* strimzi-kafka.json
+* strimzi-kafka-connect.json
+* strimzi-zookeeper.json
+* strimzi-kafka-exporter.json
+<br><br>
+The following shows the screen shots of the Grafana Dashboards after they are imported.
+<br><br>
+![Payment Gateway Grafana Dashboard](images/payment_gateway_grafana_dashboard.png)
+<br><br>
+![Zookeeper Grafana Dashboard](images/zookeeper_grafana_dashboard.png)
+<br><br>
+![Kafka Grafana Dashboard](images/kafka_grafana_dashboard.png)
+<br><br>
+![Kafka Connect Grafana Dashboard](images/kafka_connect_grafana_dashboard.png)
+
+### Accessing The Customer UI
+1. Browse to OpenShift admin console and click on the customer-ui route to access the demo UI.
+![Customer UI](images/customer-ui_route.png)
+<br>
+2. You will be prompted with the following RHSSO login screen. Enter the demo username and password (`john/password` or `jenny/password`)
+
+![RHSSO Auth Screen for Customer UI](images/rhsso_auth_customer_ui.png)
+<br>
+3. Try with some money transfer from one account to the other account. Refer earlier section for the detail of demo information on the user accounts.
+![Customer UI landing page](images/customer_ui_landingpage.png)
+<br>
+![Customer UI transfer money page](images/customer_ui_transfer_money.png)
+<br>
+![Customer UI transfer money success page](images/customer_ui_transfermoney_success.png)
+<br>
+
 ## Additional Information
 
 * Refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement some of the components that are used in this demo. Although the codes on this article may be outdated but it provides some well documented detail to get started.
+* [Implementing Camel Integration Service with Apache Camel](http://braindose.blog/2020/06/05/implementing-integration-service-with-red-hat-fuse-apache-camel/).
+* [How to Create A MongoDB Kafka Connect Container Image for OpenShift](http://braindose.blog/2020/06/11/how-create-mongodb-kafka-connect-container-openshift/)

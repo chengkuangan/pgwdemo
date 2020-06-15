@@ -4,25 +4,30 @@
 ### 
 ### Installation script for Payment Gateway Demo.
 ### Contributed By: CK Gan (chgan@redhat.com)
+### Complete demo setup guide is at https://github.com/chengkuangan/pgwdemo
 ### 
 ########################################################################################################################
 
 APPS_NAMESPACE="paygate"
-KAFKA_NAMESPACE=$APPS_NAMESPACE
 KAFKA_CLUSTER_NAME="kafka-cluster"
 APPS_PROJECT_DISPLAYNAME="Payment Gateway"
-#CREDITRESPONSE_MONGODB_NAME="creditresponse"
 APP_DOMAIN_NAME="apps.ocpcluster1.gemsdemolab.com"
 RHSSO_NAMESPACE="rhsso"
 OC_USER=""
 SSO_APPNAME="sso"
 SSO_ADMIN_USERNAME="admin"
 SSO_ADMIN_PASSWORD="password"
-PRREFIX_NAMESPACE="yes"
+STRIMZI_SLACKAPI_URL="https:\/\/ssa-mr19696.slack.com"
+STRIMZI_SLACK_CHANNEL="#paygate-strimzi"
+PROCEED_INSTALL="no"
 
-#---- @Deprecated
-KAFKA_OPERATOR_NAMESPACE=$KAFKA_NAMESPACE
-DEPLOY_KAFKA_OPERATOR="no"
+### ------
+# @Deprecated
+KAFKA_NAMESPACE=$APPS_NAMESPACE
+PRREFIX_NAMESPACE="yes"
+INSTALL_PROMETHEUS="no"
+INSTALL_BASIC_DEMO="no"
+### ------
 
 function init(){
     
@@ -30,7 +35,7 @@ function init(){
     OC_USER="$(oc whoami)"
     set echo on
     
-    if [ $? -ne 0 ] || [$OC_USER == ""]; then
+    if [ $? -ne 0 ] || [ "$OC_USER" = "" ]; then
         echo
         echo "Please login to Openshift before proceed..."
         echo
@@ -44,22 +49,18 @@ function init(){
 function printVariables(){
     echo 
     echo "The following is the parameters enter..."
-    echo "Please note that the namespaces are prefix with the OpenShift username if PRREFIX_NAMESPACE=yes"
     echo
     echo "APPS_NAMESPACE = $APPS_NAMESPACE"
     echo "APPS_PROJECT_DISPLAYNAME = $APPS_PROJECT_DISPLAYNAME"
-    #echo "DEPLOY_KAFKA_OPERATOR = $DEPLOY_KAFKA_OPERATOR"
-    echo "KAFKA_NAMESPACE = $KAFKA_NAMESPACE"
     echo "KAFKA_CLUSTER_NAME = $KAFKA_CLUSTER_NAME"
-    #echo "KAFKA_OPERATOR_NAMESPACE = $KAFKA_OPERATOR_NAMESPACE"
-    #echo "CREDITRESPONSE_MONGODB_NAME = $CREDITRESPONSE_MONGODB_NAME"
     echo "RHSSO_NAMESPACE = $RHSSO_NAMESPACE"
     echo "SSO_ADMIN_USERNAME = $SSO_ADMIN_USERNAME"
     echo "SSO_ADMIN_PASSWORD = $SSO_ADMIN_PASSWORD"
     echo "SSO_APPNAME = $SSO_APPNAME"
     echo "APP_DOMAIN_NAME = $APP_DOMAIN_NAME"
     echo "OC_USER = $OC_USER"
-    echo "PRREFIX_NAMESPACE = $PRREFIX_NAMESPACE" 
+    echo "STRIMZI_SLACKAPI_URL = $STRIMZI_SLACKAPI_URL"
+    echo "STRIMZI_SLACK_CHANNEL = $STRIMZI_SLACK_CHANNEL"
     echo
 
 }
@@ -67,8 +68,6 @@ function printVariables(){
 function preRequisitionCheck(){
     ## --- Check if the Kafka yaml files are in the kafka-resource folder
     if [ ! -d "../kafka-resources/install/cluster-operator" ]; then
-    #    echo ""
-    #else 
         echo
         echo "Missing AMQ Streams OCP Install YMAL files..."
         echo
@@ -77,9 +76,10 @@ function preRequisitionCheck(){
         echo "kafka-resources/install"
         echo "kafka-resources/examples"
         echo
+        removeTempDirs
         exit 0
     fi 
-    
+
     hash jq
     
     if [ $? -ne 0 ]; then
@@ -87,6 +87,31 @@ function preRequisitionCheck(){
         echo "You will required jq command line JSON processor ... "
         echo "Please download and install the command line tool from here ... https://stedolan.github.io/jq/"
         echo
+        removeTempDirs
+        exit 0
+    fi
+
+    oc project $RHSSO_NAMESPACE
+    
+    if [ $? -ne 0 ]; then
+        echo
+        echo "Please ensure you have the following OpenShift projects created before proceed ... "
+        echo "   * $RHSSO_NAMESPACE"
+        echo "   * $APPS_NAMESPACE"
+        echo
+        removeTempDirs
+        exit 0
+    fi
+
+    oc project $APPS_NAMESPACE
+
+    if [ $? -ne 0 ]; then
+        echo
+        echo "Please ensure you have the following OpenShift projects created before proceed ... "
+        echo "   * $RHSSO_NAMESPACE"
+        echo "   * $APPS_NAMESPACE"
+        echo
+        removeTempDirs
         exit 0
     fi
 
@@ -141,14 +166,21 @@ function updateKafkaResourcesFiles(){
 }
 
 function deployKafka(){
-    if [ $DEPLOY_KAFKA_OPERATOR = "yes" ]; then
-        echo 
-        echo "--> Deploying AMQ Streams (Kafka) Operator now ... Using ../kafka-resources/install/cluster-operator ... "
-        oc apply -f ../kafka-resources/install/cluster-operator -n $KAFKA_OPERATOR_NAMESPACE
-    fi
+    # ---- Not in used now, temporary remove for future improvement ...
+    #if [ $DEPLOY_KAFKA_OPERATOR = "yes" ]; then
+    #    echo 
+    #    echo "--> Deploying AMQ Streams (Kafka) Operator now ... Using ../kafka-resources/install/cluster-operator ... "
+    #    oc apply -f ../kafka-resources/install/cluster-operator -n $KAFKA_OPERATOR_NAMESPACE
+    #fi
+    echo
+    echo "--> Modifying ../templates/kafka/kafka-persistent.yaml"
+    echo
+    mkdir ../tmp/kafka
+    cp ../templates/kafka/kafka-persistent.yaml ../tmp/kafka/kafka-persistent.yaml
+    sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/kafka-persistent.yaml
     echo 
     echo "--> Deploying AMQ Streams (Kafka) Cluster now ... Using ../kafka-resources/examples/kafka/kafka-persistent.yaml ..."
-    oc apply -f ../kafka-resources/examples/kafka/kafka-persistent.yaml -n $KAFKA_NAMESPACE
+    oc apply -f ../tmp/kafka/kafka-persistent.yaml -n $APPS_NAMESPACE
     echo
 }
 
@@ -191,8 +223,8 @@ function postDeployCreditResponseMongoDBConfig(){
             # oc get pod creditresponse-1-dgkpk -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n pg
             echo "Waiting for POD to be ready... POD: $CREDITRESPONSE_MONGODB_POD_NAME, ready: $CREDITRESPONSE_MONGODB_POD_READY ..."
         done
-    oc cp ../scripts/crmdb.js $CREDITRESPONSE_MONGODB_POD_NAME:/tmp/
-    oc exec $CREDITRESPONSE_MONGODB_POD_NAME -- scl enable rh-mongodb32 -- mongo localhost:27017/admin /tmp/crmdb.js
+    oc cp ../scripts/crmdb.js $CREDITRESPONSE_MONGODB_POD_NAME:/tmp/ -n $APPS_NAMESPACE
+    oc exec $CREDITRESPONSE_MONGODB_POD_NAME -- scl enable rh-mongodb32 -- mongo localhost:27017/admin /tmp/crmdb.js -n $APPS_NAMESPACE
 }
 
 # ----- Deploy Kafka Connect
@@ -215,7 +247,7 @@ function deployKafkaConnect(){
             KAFKA_POD_READY="$(oc get pod $KAFKA_CLUSTER_NAME-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
             echo "POD: $KAFKA_CLUSTER_NAME-kafka-0, ready: $KAFKA_POD_READY"
         done
-    oc apply -f ../kafka-resources/examples/kafka-connect/kafka-connect.yaml -n $APPS_NAMESPACE
+    oc apply -f ../templates/kafka/kafka-connect/kafka-connect.yaml -n $APPS_NAMESPACE
 }
 
 ## --- configure kafka connect for Credit Response mongodb
@@ -243,8 +275,8 @@ function configureKafkaConnect4CRMDB(){
             MONGODB_KAFKA_CONNECT_POD_READY="$(oc get pod $MONGODB_KAFKA_CONNECT_POD_NAME -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
             echo "POD: $MONGODB_KAFKA_CONNECT_POD_NAME, ready: $MONGODB_KAFKA_CONNECT_POD_READY"
         done
-    oc cp ../sc/CreditResponseMongoDB/connect-mongodb-sink.json $MONGODB_KAFKA_CONNECT_POD_NAME:/tmp/
-    MESSAGE=$(oc exec $MONGODB_KAFKA_CONNECT_POD_NAME -- curl -d @/tmp/connect-mongodb-sink.json -H "Content-Type: application/json" -X POST http://localhost:8083/connectors)
+    oc cp ../sc/CreditResponseMongoDB/connect-mongodb-sink.json $MONGODB_KAFKA_CONNECT_POD_NAME:/tmp/ -n $APPS_NAMESPACE
+    MESSAGE=$(oc -n $APPS_NAMESPACE exec $MONGODB_KAFKA_CONNECT_POD_NAME -- curl -d @/tmp/connect-mongodb-sink.json -H "Content-Type: application/json" -X POST http://localhost:8083/connectors)
     if [[ $MESSAGE == *"error_code"* ]] ; then
         echo
         echo "Error configuring MongoDB Kafka Connect. Please check the log for more details. Please verify the content is correct in ./CreditResponseMongoDB/connect-mongodb-sink.json"
@@ -258,7 +290,7 @@ function deployRHSSO(){
     echo "--> Deploy RHSSO ..."
     echo
 
-    oc new-project $RHSSO_NAMESPACE
+    #oc new-project $RHSSO_NAMESPACE
     oc policy add-role-to-user view system:serviceaccount:$RHSSO_NAMESPACE:default -n $RHSSO_NAMESPACE
 
     mkdir ../tmp/sso
@@ -277,8 +309,8 @@ function deployRHSSO(){
     echo
     echo "Creating secret for RHSSO ..."
     echo
-    oc create secret generic sso-app-secret --from-file=../tmp/sso/keystore.jks --from-file=../tmp/sso/jgroups.jceks --from-file=../tmp/sso/truststore.jks
-    oc secrets link default sso-app-secret
+    oc create secret generic sso-app-secret --from-file=../tmp/sso/keystore.jks --from-file=../tmp/sso/jgroups.jceks --from-file=../tmp/sso/truststore.jks -n $RHSSO_NAMESPACE
+    oc secrets link default sso-app-secret -n $RHSSO_NAMESPACE
 
     echo
     echo "Deploying RHSSO using template ..."
@@ -329,15 +361,15 @@ function deployRHSSO(){
     cp ../templates/paymentgateway-realm.json ../tmp/sso/
     sed -i -e "s/http:\/\/customeraccount:3000/http:\/\/customer-ui-$APPS_NAMESPACE.$APP_DOMAIN_NAME/" ../tmp/sso/paymentgateway-realm.json
 
-    oc cp ../tmp/sso/paymentgateway-realm.json $SSO_POD_NAME:/tmp/
+    oc cp ../tmp/sso/paymentgateway-realm.json $SSO_POD_NAME:/tmp/ -n $RHSSO_NAMESPACE
 
-    MESSAGE=$(oc exec $SSO_POD_NAME -- curl -k -X POST "http://sso:8080/auth/realms/master/protocol/openid-connect/token" -H "Content-Type: application/x-www-form-urlencoded" -d "username=$SSO_ADMIN_USERNAME" -d "password=$SSO_ADMIN_PASSWORD" -d "grant_type=password" -d "client_id=admin-cli")
+    MESSAGE=$(oc -n $RHSSO_NAMESPACE exec $SSO_POD_NAME -- curl -k -X POST "http://sso:8080/auth/realms/master/protocol/openid-connect/token" -H "Content-Type: application/x-www-form-urlencoded" -d "username=$SSO_ADMIN_USERNAME" -d "password=$SSO_ADMIN_PASSWORD" -d "grant_type=password" -d "client_id=admin-cli")
     if [[ $MESSAGE == *"error_code"* ]] ; then
         echo
         echo "Error getting access token from RHSSO at Pod:$SSO_POD_NAME. Please check the log for more details."
     else
         TOKEN=$(echo $MESSAGE | jq -r '.access_token')
-        MESSAGE=$(oc exec $SSO_POD_NAME -- curl -k -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d @/tmp/paymentgateway-realm.json http://sso:8080/auth/admin/realms)
+        MESSAGE=$(oc -n $RHSSO_NAMESPACE exec $SSO_POD_NAME -- curl -k -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d @/tmp/paymentgateway-realm.json http://sso:8080/auth/admin/realms)
         if [[ $MESSAGE == *"error_code"* ]] ; then
             echo
             echo "Error importing PaymentGateway Realm. Using $SSO_POD_NAME:/tmp/paymentgateway-realm.json"
@@ -353,6 +385,9 @@ function deployAccountService(){
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountservice-templates.yaml
+    
+    # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
+    oc annotate --overwrite svc accountservice prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
 
     mkdir ../tmp/accountservice && cp -r ../sc/AccountService/* ../tmp/accountservice/ && rm -f ../tmp/accountservice/README.adoc && rm -rf ../tmp/accountservice/target
     oc start-build accountservice --from-file=../tmp/accountservice/ -n $APPS_NAMESPACE
@@ -367,6 +402,9 @@ function deployCreditService(){
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/creditservice-template.json -p KAFKA_BOOTSTRAP_SERVER=$KAFKA_CLUSTER_NAME-kafka-bootstrap:9092
     
+    # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
+    oc annotate --overwrite svc creditservice prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
+
     mkdir ../tmp/creditservice && cp -r ../sc/Credit/* ../tmp/creditservice/ && rm -f ../tmp/creditservice/README.adoc && rm -rf ../tmp/creditservice/node_modules
     oc start-build creditservice --from-file=../tmp/creditservice/ -n $APPS_NAMESPACE
 
@@ -399,6 +437,9 @@ function deployAccountProfile(){
     echo
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountprofile-templates.yaml
+    
+    # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
+    oc annotate --overwrite svc accountprofile prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
 
     mkdir ../tmp/accountprofile && cp -r ../sc/AccountProfile/* ../tmp/accountprofile/ && rm -f ../tmp/accountprofile/README.adoc && rm -rf ../tmp/accountprofile/target
     oc start-build accountprofile --from-file=../tmp/accountprofile/ -n $APPS_NAMESPACE
@@ -436,11 +477,12 @@ function deployCustomerUI(){
     -p RHSSO_URL=http://$SSO_APPNAME-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME
     #-p CREDIT_API_URL=http://creditservice-chgan-payment-gateway.apps.ocpcluster1.gemsdemolab.com/ws/pg/credits \
     
+    # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
+    oc annotate --overwrite svc customer-ui prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
     
     mkdir ../tmp/customerui && cp -r ../sc/CustomerUI/* ../tmp/customerui/  && rm -f ../tmp/customerui/README.adoc && rm -rf ../tmp/customerui/node_modules
     sed -i -e "s/http:\/\/localhost:8080\/auth/http:\/\/$SSO_APPNAME-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME\/auth/" ../tmp/customerui/keycloak.json
     oc start-build customer-ui --from-file=../tmp/customerui/ -n $APPS_NAMESPACE
-
     
 }
 
@@ -504,7 +546,7 @@ function importSampleData(){
 # ----- Remove all tmp content after completed.
 function removeTempDirs(){
     echo
-    echo "--> Removing tmp directory ... "
+    echo "--> Removing ../tmp directory ... "
     echo
     rm -rf ../tmp
 }
@@ -515,62 +557,263 @@ function readInput(){
     echo "Please provides the following parameter values. (Enter q to quit)"
     while [ "$INPUT_VALUE" != "q" ]
     do  
-        echo "Namespace[$APPS_NAMESPACE]:"
+        echo "Namespace [$APPS_NAMESPACE]:"
         read INPUT_VALUE
         if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
             APPS_NAMESPACE="$INPUT_VALUE"
         fi
-        echo "Kafka Cluster Name[$KAFKA_CLUSTER_NAME]:"
+
+        echo "RHSSO Namespace [$RHSSO_NAMESPACE]:"
         read INPUT_VALUE
         if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            KAFKA_CLUSTER_NAME=$INPUT_VALUE
+            RHSSO_NAMESPACE="$INPUT_VALUE"
         fi
-        echo "Apps Domain Name[$APP_DOMAIN_NAME]:"
+
+        echo "Apps Domain Name [$APP_DOMAIN_NAME]:"
         read INPUT_VALUE
         if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
             APP_DOMAIN_NAME=$INPUT_VALUE
         fi
-        echo "Prefix namespaces with username? [$PRREFIX_NAMESPACE]:"
+
+        echo "Kafka Cluster Name [$KAFKA_CLUSTER_NAME]:"
         read INPUT_VALUE
         if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            PRREFIX_NAMESPACE=$INPUT_VALUE
+            KAFKA_CLUSTER_NAME=$INPUT_VALUE
         fi
+        
+        echo "Slack API URL [$STRIMZI_SLACKAPI_URL]:"
+        read INPUT_VALUE
+        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+            STRIMZI_SLACKAPI_URL=$INPUT_VALUE
+        fi
+
+        echo "Slack Channel [$STRIMZI_SLACK_CHANNEL]:"
+        read INPUT_VALUE
+        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+            STRIMZI_SLACK_CHANNEL=$INPUT_VALUE
+        fi
+
         INPUT_VALUE="q"
     done
 }
 
-# --- populate the installer environment viarables based on user inputs.
-function populateEnV(){
-    if [ "$PRREFIX_NAMESPACE" = "yes" ]; then
-        APPS_NAMESPACE="$OC_USER-$APPS_NAMESPACE"
-        RHSSO_NAMESPACE="$OC_USER-$RHSSO_NAMESPACE"
-    fi
-    KAFKA_NAMESPACE="$APPS_NAMESPACE"
+# --- 
+# Installing Fuse Console for namespaces
+# Pre-requistions:
+#   1. You have the cluster admin role for the OpenShift cluster.
+#   2. The Fuse Console image stream (along with the other Fuse image streams) are installed, as described in Installing Fuse imagestreams and templates on the OpenShift 4.x server.
+#      https://access.redhat.com/documentation/en-us/red_hat_fuse/7.6/html-single/fuse_on_openshift_guide/index#install-fuse-on-openshift4
+# ---
+function deployFuseConsole(){
+    
+    echo
+    echo "--> Deploying Fuse Console ... "
+    echo
+
+    mkdir ../tmp/fuseconsole
+
+    echo
+    echo "Generating required client certs ... "
+    echo
+
+    oc get secrets/signing-key -n openshift-service-ca -o "jsonpath={.data['tls\.crt']}" | base64 --decode > ../tmp/fuseconsole/ca.crt
+    oc get secrets/signing-key -n openshift-service-ca -o "jsonpath={.data['tls\.key']}" | base64 --decode > ../tmp/fuseconsole/ca.key
+
+    openssl genrsa -out ../tmp/fuseconsole/server.key 2048
+
+    openssl req -new -key ../tmp/fuseconsole/server.key -out ../tmp/fuseconsole/server.csr -config ../templates/fuseconsole/csr.conf
+
+    openssl x509 -req -in ../tmp/fuseconsole/server.csr -CA ../tmp/fuseconsole/ca.crt -CAkey ../tmp/fuseconsole/ca.key -CAcreateserial -out ../tmp/fuseconsole/server.crt -days 10000 -extensions v3_ext -extfile ../templates/fuseconsole/csr.conf
+    
+    echo
+    echo "Using ../templates/fuseconsole/fuse-console-namespace-os4.json ..."
+    echo
+
+    FUSE_APP_NAME=$(cat ../templates/fuseconsole/fuse-console-namespace-os4.json |  jq -r '.parameters[] | select(.name=="APP_NAME") | .value')
+    FUSE_APP_VERSION=$(cat ../templates/fuseconsole/fuse-console-namespace-os4.json |  jq -r '.parameters[] | select(.name=="APP_VERSION") | .value')
+    
+    echo
+    echo "Using Fuse Console APP_NAME:$FUSE_APP_NAME, FUSE_APP_VERSION:$FUSE_APP_VERSION ..."
+    echo
+
+    echo
+    echo "Creating secret $FUSE_APP_NAME-tls-proxying ..."
+    echo
+
+    oc -n $APPS_NAMESPACE create secret tls $FUSE_APP_NAME-tls-proxying --cert ../tmp/fuseconsole/server.crt --key ../tmp/fuseconsole/server.key
+
+    echo
+    echo "Importing fuse-console:$FUSE_APP_VERSION image if not available ..."
+    echo
+    oc import-image fuse7/fuse7-console:$FUSE_APP_VERSION --from=registry.redhat.io/fuse7/fuse-console:1.6 --confirm -n openshift
+
+    echo
+    echo "Creating Fuse Console Apps ..."
+    echo
+    oc new-app -f ../templates/fuseconsole/fuse-console-namespace-os4.json -n $APPS_NAMESPACE
+
 }
 
+function deployNConfigurePrometheus(){
+
+    echo
+    echo "--> Deploying Prometheus for Kafka ... "
+    echo
+    
+    echo
+    echo "Creating the secret ... "
+    echo
+    oc create secret generic additional-scrape-configs --from-file=../templates/kafka/metrics/prometheus-additional-properties/prometheus-additional.yaml  -n $APPS_NAMESPACE
+
+    echo
+    echo "Deploying Prometheus ... "
+    echo
+    
+    mkdir -p ../tmp/kafka/metrics/prometheus-install
+    cp ../templates/kafka/metrics/prometheus-install/strimzi-service-monitor.yaml ../tmp/kafka/metrics/prometheus-install/strimzi-service-monitor.yaml
+    cp ../templates/kafka/metrics/prometheus-install/prometheus.yaml ../tmp/kafka/metrics/prometheus-install/prometheus.yaml
+    
+    sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/metrics/prometheus-install/strimzi-service-monitor.yaml
+    sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/metrics/prometheus-install/prometheus.yaml
+
+    oc apply -f ../tmp/kafka/metrics/prometheus-install/strimzi-service-monitor.yaml  -n $APPS_NAMESPACE
+    oc apply -f ../templates/kafka/metrics/prometheus-install/prometheus-rules.yaml  -n $APPS_NAMESPACE
+    oc apply -f ../tmp/kafka/metrics/prometheus-install/prometheus.yaml  -n $APPS_NAMESPACE
+
+    echo
+    echo "--> Deploying AlertManager ... "
+    echo
+
+    echo
+    echo "Creating secret ... "
+    echo
+    mkdir -p ../tmp/kafka/metrics/prometheus-alertmanager-config
+    cp ../templates/kafka/metrics/prometheus-alertmanager-config/alert-manager-config.yaml ../tmp/kafka/metrics/prometheus-alertmanager-config/alert-manager-config.yaml
+    sed -i -e "s/slack_api_url:.*/slack_api_url: $STRIMZI_SLACKAPI_URL/" ../tmp/kafka/metrics/prometheus-alertmanager-config/alert-manager-config.yaml
+    sed -i -e "s/channel:.*/channel: $STRIMZI_SLACK_CHANNEL/" ../tmp/kafka/metrics/prometheus-alertmanager-config/alert-manager-config.yaml
+    
+    oc create secret generic alertmanager-alertmanager --from-file=alertmanager.yaml=../tmp/kafka/metrics/prometheus-alertmanager-config/alert-manager-config.yaml -n $APPS_NAMESPACE
+
+    echo
+    echo "Deploying AlertManager ... "
+    echo
+    oc apply -f ../templates/kafka/metrics/prometheus-install/alert-manager.yaml -n $APPS_NAMESPACE
+
+    echo
+    echo "--> Deploying Grafana ... "
+    echo
+    oc apply -f ../templates/kafka/metrics/grafana-install/grafana.yaml -n $APPS_NAMESPACE
+
+    oc expose service grafana  -n $APPS_NAMESPACE
+
+    # --- updating the Grafana Dashboard json with the correct ocp project name.
+    cp ../templates/grafana/grafanadashboard_common_payment_gateway_overview.json ../templates/grafana/grafanadashboard_payment_gateway_overview.json
+    sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/grafanadashboard_payment_gateway_overview.json
+
+    echo
+    echo "Please refer to the following for guide on enabling the Grafana dashboard for Kafka ... "
+    echo
+    echo "https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#proc-metrics-grafana-dashboard-str"
+    echo
+}
+
+function printCmdUsage(){
+    echo 
+    echo "This is the Payment Gateway demo installer."
+    echo
+    echo "Command usage: ./deployDemo.sh <options>"
+    echo 
+    echo "-h       Show this help."
+    echo "-i       Install the default demo / basic demo."
+    echo 
+}
+
+function printHelp(){
+    printCmdUsage
+    echo "The following is a quick list of the installer requirements:"
+    echo "    * The required OpenShift projects are created."
+    echo "    * keytool is installed on your system."
+    echo "    * openssl is installed on your system."
+    echo "    * jq is installed on your system."
+    echo "    * Kafka Operator is installed on OpenShift."
+    echo "    * Promethues Operator is installed in the same namespace as the demo apps. This is only required if Promethues is to be installed."
+    echo "    * An Openshift user with cluster-admin role."
+    echo
+    echo "Refer to the following website for the complete guide ..."
+    echo "https://github.com/chengkuangan/pgwdemo"
+    echo
+}
+
+function processArguments(){
+
+    if [ $# -eq 0 ]; then
+        printCmdUsage
+        exit 0
+    fi
+
+    while (( "$#" )); do
+      if [ "$1" == "-h" ]; then
+        printHelp
+        exit 0
+      # Proceed to install
+      elif [ "$1" == "-i" ]; then
+        PROCEED_INSTALL="yes"
+        shift
+      else
+        echo "Unknown argument: $1"
+        printCmdUsage
+        exit 0
+      fi
+      shift
+    done
+}
+
+# ------
+# Install only the basic demo
+# The basic demo is without the following:
+#    - Prometheus
+# ------
+function installBaseDemo(){
+    #createNamespaces
+    deployKafka
+    deployCRMDB
+    deployKafkaConnect
+    deployAccountService
+    deployCreditService
+    deployEventCorrelator
+    deployAccountProfile
+    deployCustomerCamelService
+    deployCustomerUI
+    postDeployCreditResponseMongoDBConfig
+    configureKafkaConnect4CRMDB
+    importSampleData
+    deployRHSSO
+    deployFuseConsole
+}
+
+function showConfirmToProceed(){
+    echo
+    echo "Press ENTER (OR Ctrl-C to cancel) to proceed..."
+    read bc
+}
+
+processArguments $@
 init
-preRequisitionCheck
 readInput
-populateEnV
+preRequisitionCheck
 printVariables
 
-echo
-echo "Press ENTER (OR Ctrl-C to cancel) to proceed..."
-read bc
+if [ "$PROCEED_INSTALL" != "yes" ]; then
+    removeTempDirs
+    exit 0
+fi
 
-#updateKafkaResourcesFiles
-createNamespaces
-deployKafka
-deployCRMDB
-deployKafkaConnect
-deployAccountService
-deployCreditService
-deployEventCorrelator
-deployAccountProfile
-deployCustomerCamelService
-deployCustomerUI
-postDeployCreditResponseMongoDBConfig
-configureKafkaConnect4CRMDB
-importSampleData
-deployRHSSO
+echo "Please ensure you had installed the following Operator before proceed ..."
+echo
+echo "   * Red Hat AMQ Streams Operator"
+echo "   * Prometheus Operator"
+echo
+showConfirmToProceed
+installBaseDemo
+deployNConfigurePrometheus
 removeTempDirs

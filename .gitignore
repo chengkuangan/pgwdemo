@@ -40,3 +40,4 @@ sc/EventCorrelator/target
 scripts/startDevEnv.sh
 scripts/.DS_Store
 tmp
+README.md.old

@@ -10,11 +10,13 @@
   "author": "Gan Cheng Kuan",
   "dependencies": {
     "axios": "latest",
+    "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "express": "latest",
+    "express": "^4.17.1",
     "express-session": "^1.17.0",
     "hbs": "latest",
     "keycloak-connect": "^8.0.1",
+    "prom-client": "^12.0.0",
     "walk": "^2.3.14"
   }
 }
