@@ -183,6 +183,8 @@ Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-
 * strimzi-zookeeper.json
 * strimzi-kafka-exporter.json
 <br><br>
+Refer [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for detail.
+<br><br>
 The following shows the screen shots of the Grafana Dashboards after they are imported.
 <br><br>
 ![Payment Gateway Grafana Dashboard](images/payment_gateway_grafana_dashboard.png)
@@ -194,18 +196,20 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 ![Kafka Connect Grafana Dashboard](images/kafka_connect_grafana_dashboard.png)
 
 ### Accessing The Customer UI
-1. Browse to OpenShift admin console and click on the customer-ui route to access the demo UI.
+1. Browse to OpenShift admin console and click on the customer-ui route to access the demo UI.<br><br>
 ![Customer UI](images/customer-ui_route.png)
 <br>
-2. You will be prompted with the following RHSSO login screen. Enter the demo username and password (`john/password` or `jenny/password`)
+
+2. You will be prompted with the following RHSSO login screen. Enter the demo username and password (`john/password` or `jenny/password`)<br><br>
 
 ![RHSSO Auth Screen for Customer UI](images/rhsso_auth_customer_ui.png)
 <br>
-3. Try with some money transfer from one account to the other account. Refer earlier section for the detail of demo information on the user accounts.
+
+3. Try with some money transfer from one account to the other account. Refer earlier section for the detail of demo information on the user accounts.<br><br>
 ![Customer UI landing page](images/customer_ui_landingpage.png)
-<br>
+<br><br>
 ![Customer UI transfer money page](images/customer_ui_transfer_money.png)
-<br>
+<br><br>
 ![Customer UI transfer money success page](images/customer_ui_transfermoney_success.png)
 <br>
 
