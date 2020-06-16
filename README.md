@@ -147,13 +147,11 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 1. Clone this repo into your local PC.
 
 2. Create the required OCP projects to deploy this demo:
-<br>
 
 * Project for RHSSO. Example: `rhsso`
 * Project for the demo applications and containers. Example: `paygate`
 
 3. With cluster-admin role, deploy the following operators:
-<br>
 
 * Red Hat AMQ Streams Operator
 * Prometheus Operator
