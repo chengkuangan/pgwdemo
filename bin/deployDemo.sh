@@ -114,7 +114,8 @@ function preRequisitionCheck(){
         removeTempDirs
         exit 0
     fi
-
+    #TODO
+    ## To add pre-req checking whether the requried operator has been installed.
 }
 
 
