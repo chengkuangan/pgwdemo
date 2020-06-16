@@ -148,11 +148,13 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 
 2. Create the required OCP projects to deploy this demo:
 <br>
+
 * Project for RHSSO. Example: `rhsso`
 * Project for the demo applications and containers. Example: `paygate`
 
 3. With cluster-admin role, deploy the following operators:
 <br>
+
 * Red Hat AMQ Streams Operator
 * Prometheus Operator
 <br><br>Please refer to [Deploying Promethues and Grafana on OpenShift](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for more detail.
