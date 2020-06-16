@@ -140,7 +140,7 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 * You need to have openssl and keytool installed on your PC. The installer uses openssl and keytool to automate the RHSSO certs and keys creations.
 * You should have Prometheus Operator installed.
 * Pre-created the necessary OCP projects for RHSSO and the application project.
-* PVs are required. I have no time to list them all here. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift which we will not worry how many PVs we need to provide.
+* PVs are required. I have no time to list them all here. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
 
 ### Installation Steps
 
