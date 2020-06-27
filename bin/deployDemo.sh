@@ -985,6 +985,7 @@ function printHelp(){
 }
 
 function printResult(){
+    echo 
     echo "=============================================================================================================="
     echo 
     echo " Payment Gateway Installation Completed !!! "
@@ -992,14 +993,25 @@ function printResult(){
     echo " You can access to the demo at the following URLs:"
     echo
     echo " Customer UI - http://customer-ui-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
+    echo "      Account:"
+    echo "          - john/password"
+    echo "          - jenny/password"
+    echo
     echo " Apps Grafana - http://grafana-$APPS_NAMESPACE.$APP_DOMAIN_NAME"
+    echo "      Account: Use the openshift username to login."
+    echo
     echo " Fuse Console - http://fuse76-console-route-$APPS_NAMESPACE.$APP_DOMAIN_NAME"
+    echo "      Account: Use the openshift username to login"
+    echo
     echo " RHSSO Admin Console - http://sso-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME or https://secure-sso-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME"
+    echo "      Account:"
+    echo "          - $SSO_ADMIN_USERNAME/$SSO_ADMIN_PASSWORD"
     echo
     echo " ServiceMesh Services: "
     echo "      Kiali - http://kiali-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
     echo "      Prometheus - http://prometheus-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
     echo "      Grafana - http://grafana-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
+    echo "          Account: Use the openshift username to login"
     echo
     echo " There might be situation some of the Applications shown on Kiali console with \"Missing Sidecar\". " 
     echo " This is because the applications deployed before ServiceMesh is ready. Please run the following command "
@@ -1007,7 +1019,12 @@ function printResult(){
     echo 
     echo "      ./deploy.sh -rd"
     echo
+    echo " The RHSSO installed is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO project and run the following command to recreate the RHSSO:"
+    echo 
+    echo "      ./deployDemo.sh -sso"
+    echo
     echo "=============================================================================================================="
+    echo
 }
 
 function processArguments(){
@@ -1076,6 +1093,7 @@ function reinstallRHSSO(){
         showConfirmToProceed
         oc new-project $RHSSO_NAMESPACE
         deployRHSSO
+        removeTempDirs
         exit 0
     fi
 }

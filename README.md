@@ -157,8 +157,8 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 * Pre-created the necessary OCP projects for the following:
   * RHSSO
   * The applications
-  * The Red Hat ServiceMesh / Istio core system.
-* PVs are required. Impossible foe me to list them all here now. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
+  * The Red Hat ServiceMesh Control Plane
+* PVs are required. Impossible for me to list them all here now. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
 
 ### Installation Steps
 
@@ -181,14 +181,15 @@ cd bin
 
 **Note:**
 
-* There maybe situation where some of the PODs does not have injected Istio sidecar. This is because the PODs are deployed before the Istio is ready. Run the following command to redeploy the PODs:
+* There maybe situation where some of the PODs does not have injected Istio sidecar. This is because the PODs are deployed before the ServiceMesh Contol Plane services are ready. Run the following command to redeploy the PODs:
 ```
 ./deployDemo.sh -rd
 ```
-* The RHSSO is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO project and run the following command to recreate the RHSSO:
+* The RHSSO installed is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO project and run the following command to recreate the RHSSO:
 ```
 ./deployDemo.sh -sso
 ```
+* The username and password for the demo will be printed on command prompt screen after the installation completed.
 
 ## Post Installation Configurations
 
@@ -207,20 +208,26 @@ templates/grafana/grafanadashboard_payment_gateway_overview.json
 
 4. There are pre-defined AMQ Streams dashboard examples which you can import into the Grafana. These sample JSON files are located in `templates/kafka/metrics/grafana-dashboards`
 <br>
+
   * strimzi-kafka.json
   * strimzi-kafka-connect.json
   * strimzi-zookeeper.json
-<br><br>
+<br>
+
 Refer [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for detail.
-<br><br>
+<br>
+
 Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#assembly-metrics-grafana-str) for more details.
 <br><br>
 The following shows the screen shots of the Grafana Dashboards after they are imported.
-<br><br>
+<br>
+
 ![Zookeeper Grafana Dashboard](images/zookeeper_grafana_dashboard.png)
-<br><br>
+<br>
+
 ![Kafka Grafana Dashboard](images/kafka_grafana_dashboard.png)
-<br><br>
+<br>
+
 ![Kafka Connect Grafana Dashboard](images/kafka_connect_grafana_dashboard.png)
 
 ### Accessing The Customer UI
@@ -235,24 +242,31 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 
 3. Try with some money transfer from one account to the other account. Refer earlier section for the detail of demo information on the user accounts.<br><br>
 ![Customer UI landing page](images/customer_ui_landingpage.png)
-<br><br>
+<br>
+
 ![Customer UI transfer money page](images/customer_ui_transfer_money.png)
-<br><br>
+<br>
+
 ![Customer UI transfer money success page](images/customer_ui_transfermoney_success.png)
 <br>
 
-## Screen Shots of Red Hat ServiceMesh / Istio
-* Istion OpenShift Routes
-<br><br>
+## Screen Shots of Red Hat ServiceMesh
+* ServiceMesh OpenShift Routes
+<br>
+
 ![Istio Routes](images/istio_routes.png)
-<br><br>
-* Istio Kiali
-<br><br>
+<br>
+
+* ServiceMesh Kiali
+<br>
+
 ![Istio Kiali](images/istio_kiali.png)
+<br>
+
+* ServiceMesh - Kiali with Jaeger
 <br><br>
-* Istio - Kiali with Jaeger
-<br><br>
-![Istion Kiali with Jaeger](images/istio_kiali_jaeger.png)
+
+![ServiceMesh Kiali with Jaeger](images/istio_kiali_jaeger.png)
 <br><br>
 
 ## Additional Information
