@@ -147,3 +147,7 @@ exports.metrics = function (req, res) {
   res.set("Content-Type", prometheus.register.contentType);
   res.send(prometheus.register.metrics());
 };
+
+exports.healthz = function (req, res) {
+  res.status(200).send("OK");
+};

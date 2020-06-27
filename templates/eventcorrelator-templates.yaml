@@ -2,69 +2,74 @@ apiVersion: v1
 kind: Template
 metadata:
   name: event-correlator-template
+  annotations:
+    openshift.io/display-name: Event Correlator
+    description: Event Correlator service for Payment Gateway.
+    tags: payment gateway, event-correlator
+    iconClass: icon-rh-openjdk
+    openshift.io/long-description: This template deploy ${APPLICATION_NAME} application for OpenShift platform.
+    openshift.io/provider-display-name: Gan CK
+    openshift.io/documentation-url: https://github.com/chengkuangan/pgwdemo
+    openshift.io/support-url: https://github.com/chengkuangan/pgwdemo
+    template.openshift.io/bindable: "false"
+message: "The following service(s) have been created in your project: ${APPLICATION_NAME}.\n\nFor more information about using this template, see https://github.com/chengkuangan/pgwdemo/README.md"
+labels:
+  template: ${APPLICATION_NAME}
+  app: ${APPLICATION_NAME}
+  app-group: ${APPLICATION_NAME}
 objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    labels:
-      app: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
   spec:
     ports:
     - port: 8080
       protocol: TCP
       targetPort: 8080
+      name: http
     selector:
       app: ${APPLICATION_NAME}
-      deploymentconfig: ${APPLICATION_NAME}
     sessionAffinity: None
     type: ClusterIP
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: apps/v1
+  kind: Deployment
   metadata:
     labels:
-      app: ${APPLICATION_NAME}
+      version: ${APP_VERSION}
     name: ${APPLICATION_NAME}
   spec:
     replicas: 1
     selector:
-      app: ${APPLICATION_NAME}
-      deploymentconfig: ${APPLICATION_NAME}
-    strategy:
-      activeDeadlineSeconds: 21600
-      resources: {}
-      rollingParams:
-        intervalSeconds: 1
-        maxSurge: 25%
-        maxUnavailable: 25%
-        timeoutSeconds: 600
-        updatePeriodSeconds: 1
-      type: Rolling
+      matchLabels:
+        app: ${APPLICATION_NAME}
     template:
       metadata:
         labels:
           app: ${APPLICATION_NAME}
-          deploymentconfig: ${APPLICATION_NAME}
+          version: ${APP_VERSION}
+          pgw-istio: 'true'
+        annotations:
+          sidecar.istio.io/inject: "true"
       spec:
         containers:
         - env:
-          # - name: KAFKA_BOOTSTRAP_SERVER
           - name: SPRING_KAFKA_CONSUMER_BOOTSTRAP-SERVERS
             value: ${KAFKA_BOOTSTRAP_SERVER}
-          # - name: KAFKA_CONSUMER_GROUPID
           - name: SPRING_KAFKA_CONSUMER_GROUP-ID
             value: ${KAFKA_CONSUMER_GROUPID}  
-          # - name: ACCOUNT_BALANCE_POST_URL
           - name: ACCOUNTBALANCE_POST_URL
             value: ${ACCOUNT_BALANCE_POST_URL}
-          # - name: ACCOUNT_BALANCE_GET_URL
           - name: ACCOUNTBALANCE_GET_URL
             value: ${ACCOUNT_BALANCE_GET_URL}    
           - name: SERVER_PORT
             value: ${SERVER_PORT}  
-          image: ${APPLICATION_NAME}:latest
+          image: image-registry.openshift-image-registry.svc:5000/${APP_NAMESPACE}/${APPLICATION_NAME}:latest
           imagePullPolicy: IfNotPresent
           name: ${APPLICATION_NAME}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
           resources: {}
           terminationMessagePath: /dev/termination-log
         dnsPolicy: ClusterFirst
@@ -72,66 +77,40 @@ objects:
         securityContext: {}
         terminationGracePeriodSeconds: 30
     test: false
-    triggers:
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ${APPLICATION_NAME}
-        from:
-          kind: ImageStreamTag
-          name: ${APPLICATION_NAME}:latest
-      type: ImageChange
-    - type: ConfigChange
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    labels:
-      build: ${APPLICATION_NAME}
-      app: ${APPLICATION_NAME}
-    name: ${APPLICATION_NAME}
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: ${APPLICATION_NAME}:latest
-    runPolicy: Serial
-    source:
-      type: Binary
-    strategy:
-      sourceStrategy:
-        from:
-          kind: ImageStreamTag
-          name: redhat-openjdk18-openshift:1.2
-          namespace: openshift
-        env:
-        - name: MAVEN_MIRROR_URL
-          value: ${MAVEN_MIRROR_URL}  
-      type: Source
-    triggers:
-    - type: ImageChange
-      type: ConfigChange  
-- kind: ImageStream
-  apiVersion: v1
-  metadata:
-    labels:
-      app: ${APPLICATION_NAME}
-    name: ${APPLICATION_NAME}
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: "${APPLICATION_NAME}"
+#- apiVersion: v1
+#  kind: BuildConfig
+#  metadata:
+#    name: ${APPLICATION_NAME}
 #  spec:
-#    tags:
-#    - name: "${APPLICATION_NAME}"
-#      from:
+#    output:
+#      to:
 #        kind: ImageStreamTag
 #        name: ${APPLICATION_NAME}:latest
-#      importPolicy: {}
-#      annotations:
-#        description: mservices image tag
-#        tags: ${APPLICATION_NAME}
-#        version: "latest"  
+#    runPolicy: Serial
+#    source:
+#      type: Binary
+#    strategy:
+#      sourceStrategy:
+#        from:
+#          kind: ImageStreamTag
+#          name: redhat-openjdk18-openshift:1.2
+#          namespace: openshift
+#        env:
+#        - name: MAVEN_MIRROR_URL
+#          value: ${MAVEN_MIRROR_URL}  
+#      type: Source
+#    triggers:
+#    - type: ImageChange
+#      type: ConfigChange  
+#- kind: ImageStream
+#  apiVersion: v1
+#  metadata:
+#    name: ${APPLICATION_NAME}
+#  spec:
+#    output:
+#      to:
+#        kind: ImageStreamTag
+#        name: "${APPLICATION_NAME}"
 parameters:
 - description: Application Name
   displayName: Application Name
@@ -166,4 +145,14 @@ parameters:
   displayName: Service Port
   name: SERVER_PORT
   value: "8080"
-  required: true    
+  required: true 
+- name: APP_NAMESPACE
+  displayName: Application namespace
+  description: Application namespace
+  value: paygate
+  required: true
+- name: APP_VERSION
+  displayName: Application version
+  description: Application version label
+  value: v1
+  required": true   

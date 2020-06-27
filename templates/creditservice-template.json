@@ -2,171 +2,81 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "creditservice",
+        "name": "creditservice-template",
         "annotations": {
-            "openshift.io/display-name": "Node.js",
+            "openshift.io/display-name": "Credit Service",
             "description": "Credit Service for payment gateway. ",
             "tags": "payment gateway, credit service",
             "iconClass": "icon-nodejs",
             "openshift.io/long-description": "This template deploy Credit Service",
             "openshift.io/provider-display-name": "Gan Cheng Kuan",
-            "openshift.io/documentation-url": "https://github.com/chengkuangan/creditservice.git",
-            "openshift.io/support-url": "https://github.com/chengkuangan/creditservice.git",
+            "openshift.io/documentation-url": "https://github.com/chengkuangan/pgwdemo",
+            "openshift.io/support-url": "https://github.com/chengkuangan/pgwdemo",
             "template.openshift.io/bindable": "false"
         }
     },
-    "message": "The following service(s) have been created in your project: ${NAME}.\n\nFor more information about using this template, including OpenShift considerations, see https://github.com/chengkuangan/creditservice/README.md.",
+    "message": "The following service(s) have been created in your project: ${NAME}.\n\nFor more information about using this template, including OpenShift considerations, see https://github.com/chengkuangan/pgwdemo/README.md.",
     "labels": {
         "template": "${NAME}",
-        "app": "${NAME}"
+        "app": "${NAME}",
+        "app-group": "${NAME}"
     },
     "objects": [
         {
             "kind": "Service",
             "apiVersion": "v1",
             "metadata": {
-                "name": "${NAME}",
-                "annotations": {
-                    "description": "Exposes and load balances the application pods",
-                    "prometheus.io/port": "8080",
-                    "prometheus.io/scrape": "true"
-                }
+                "name": "${NAME}"
             },
             "spec": {
                 "ports": [
                     {
-                        "name": "web",
+                        "name": "http",
                         "port": 8080,
                         "targetPort": 8080
                     }
                 ],
                 "selector": {
-                    "name": "${NAME}"
+                    "app": "${NAME}"
                 }
             }
         },
         {
-            "kind": "Route",
-            "apiVersion": "v1",
-            "metadata": {
-                "name": "${NAME}"
-            },
-            "spec": {
-                "host": "${APPLICATION_DOMAIN}",
-                "to": {
-                    "kind": "Service",
-                    "name": "${NAME}"
-                }
-            }
-        },
-        {
-            "kind": "ImageStream",
-            "apiVersion": "v1",
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
             "metadata": {
                 "name": "${NAME}",
+                "labels":{
+                    "version": "${APP_VERSION}"
+                },
                 "annotations": {
-                    "description": "Keeps track of changes in the application image"
+                    "description": "Defines how to deploy the application server"
                 }
             },
             "spec": {
-                "output":{
-                    "to":{
-                        "kind": "ImageStreamTag",
-                        "name": "${NAME}"
-
-                    }
-                }
-            }
-        },
-        {
-            "kind": "BuildConfig",
-            "apiVersion": "v1",
-            "metadata": {
-                "name": "${NAME}",
-                "annotations": {
-                    "description": "Defines how to build the application",
-                    "template.alpha.openshift.io/wait-for-ready": "true"
-                }
-            },
-            "spec": {
-                "source": {
-                    "type": "Binary"
-                },
-                "strategy": {
-                    "type": "Source",
-                    "sourceStrategy": {
-                        "from": {
-                            "kind": "ImageStreamTag",
-                            "namespace": "${NAMESPACE}",
-                            "name": "nodejs:${NODEJS_VERSION}"
-                        },
-                        "env": [
-                            {
-                                "name": "NPM_MIRROR",
-                                "value": "${NPM_MIRROR}"
-                            }
-                        ]
-                    }
-                },
-                "output": {
-                    "to": {
-                        "kind": "ImageStreamTag",
-                        "name": "${NAME}:latest"
-                    }
-                },
-                "postCommit": {
-                    "script": "npm test"
-                }
-            }
-        },
-        {
-            "kind": "DeploymentConfig",
-            "apiVersion": "v1",
-            "metadata": {
-                "name": "${NAME}",
-                "annotations": {
-                    "description": "Defines how to deploy the application server",
-                    "template.alpha.openshift.io/wait-for-ready": "true"
-                }
-            },
-            "spec": {
-                "strategy": {
-                    "type": "Rolling"
-                },
-                "triggers": [
-                    {
-                        "type": "ImageChange",
-                        "imageChangeParams": {
-                            "automatic": true,
-                            "containerNames": [
-                                "${NAME}"
-                            ],
-                            "from": {
-                                "kind": "ImageStreamTag",
-                                "name": "${NAME}:latest"
-                            }
-                        }
-                    },
-                    {
-                        "type": "ConfigChange"
-                    }
-                ],
                 "replicas": 1,
                 "selector": {
-                    "name": "${NAME}"
+                    "matchLabels":{
+                        "app": "${NAME}"
+                    }
                 },
                 "template": {
                     "metadata": {
                         "name": "${NAME}",
                         "labels": {
-                            "name": "${NAME}"
+                            "app": "${NAME}",
+                            "version": "${APP_VERSION}",
+                            "pgw-istio": "true"
+                        },
+                        "annotations":{
+                            "sidecar.istio.io/inject": "true"
                         }
                     },
                     "spec": {
                         "containers": [
                             {
                                 "name": "${NAME}",
-                                "image": " ",
+                                "image": "image-registry.openshift-image-registry.svc:5000/${APP_NAMESPACE}/${NAME}:latest",
                                 "ports": [
                                     {
                                         "containerPort": 8080
@@ -255,6 +165,20 @@
             "displayName": "AMQ Stream Bootstrap Server",
             "description": "AMQ Stream Bootstrap Server service name with the port",
             "value": "kafka-cluster-kafka-bootstrap:9092"
+        },
+        {
+            "name": "APP_NAMESPACE",
+            "displayName": "Application namespace",
+            "description": "Application namespace",
+            "value": "paygate",
+            "required": true
+        },
+        {
+            "name": "APP_VERSION",
+            "displayName": "Application version",
+            "description": "Application version label",
+            "value": "v1",
+            "required": true
         }
     ]
 }

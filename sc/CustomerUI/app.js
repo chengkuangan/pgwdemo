@@ -48,6 +48,7 @@ app.get('/', keycloak.protect('customer'), customer_controller.index);
 app.get('/transfer', keycloak.protect('customer'), customer_controller.transfer);
 app.post('/transfer', keycloak.protect('customer'), customer_controller.post_transfer);
 app.get('/metrics', customer_controller.metrics);
+app.get('/healthz', customer_controller.healthz);
 
 
 //have our app listen on port 3000

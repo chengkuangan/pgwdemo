@@ -1,53 +1,58 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: mongodb-template
+  name: creditresponse-mongodb-template
+  annotations:
+    openshift.io/display-name: Payment Gateway Credit Response Mongodb
+    description: Credit Response Mongodb for Payment Gateway.
+    tags: payment gateway, creditresponsemongodb
+    iconClass: icon-rh-openjdk
+    openshift.io/long-description: This template deploy ${APPLICATION_NAME} mongodb for OpenShift platform.
+    openshift.io/provider-display-name: Gan CK
+    openshift.io/documentation-url: https://github.com/chengkuangan/pgwdemo
+    openshift.io/support-url: https://github.com/chengkuangan/pgwdemo
+    template.openshift.io/bindable: "false"
+message: "The following service(s) have been created in your project: ${APPLICATION_NAME}.\n\nFor more information about using this template, see https://github.com/chengkuangan/pgwdemo/README.md"
+labels:
+  template: ${APPLICATION_NAME}
+  app: ${APPLICATION_NAME}
+  app-group: ${APPLICATION_NAME}
 objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    labels:
-      app: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
   spec:
     ports:
-    - name: ${APPLICATION_NAME}
+    - name: tcp
       port: 27017
       protocol: TCP
       targetPort: 27017
     selector:
-      name: ${APPLICATION_NAME}
+      app: ${APPLICATION_NAME}
     sessionAffinity: None
     type: ClusterIP
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: apps/v1
+  kind: Deployment
   metadata:
     labels:
-      app: ${APPLICATION_NAME}
+      version: ${APP_VERSION}
     name: ${APPLICATION_NAME}
   spec:
     replicas: 1
-    selector:
-      name: ${APPLICATION_NAME}
     strategy:
-      activeDeadlineSeconds: 21600
-      recreateParams:
-        timeoutSeconds: 600
-#        post:
-#          failurePolicy: Abort
-#          execNewPod:
-#            containerName: ${APPLICATION_NAME}
-#            command:
-#              - "/bin/bash"
-#              - "-c"
-#              - "curl -o /tmp/crmdb.js -s https://raw.githubusercontent.com/chengkuangan/scripts/master/crmdb.js; mongo localhost:27017/admin /tmp/crmdb.js"
-      resources: {}
       type: Recreate
+    selector:
+      matchLabels:
+        app: ${APPLICATION_NAME}
     template:
       metadata:
         labels:
           app: ${APPLICATION_NAME}
-          name: ${APPLICATION_NAME}
+          version: ${APP_VERSION}
+          pgw-istio: 'true'
+        annotations:
+            sidecar.istio.io/inject: "true"
       spec:
         containers:
         - env:
@@ -61,7 +66,7 @@ objects:
             value: ${MONGODB_ADMIN_USER}  
           - name: MONGODB_DATABASE
             value: ${MONGODB_DATABASE}
-          image: ${MONGODB_IMAGE}
+          image: image-registry.openshift-image-registry.svc:5000/openshift/${MONGODB_IMAGE}:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -107,22 +112,9 @@ objects:
           persistentVolumeClaim:
             claimName: ${APPLICATION_NAME}
     test: false
-    triggers:
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ${APPLICATION_NAME}
-        from:
-          kind: ImageStreamTag
-          name: mongodb:${MONGODB_VERSION}
-          namespace: openshift
-      type: ImageChange
-    - type: ConfigChange
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    labels:
-      app: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
   spec:
     accessModes:
@@ -176,3 +168,8 @@ parameters:
   name: MONGODB_IMAGE
   value: mongodb
   required: true
+- name: APP_VERSION
+  displayName: Application version
+  description: Application version label
+  value: v1
+  required": true

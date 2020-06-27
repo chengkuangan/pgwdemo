@@ -10,8 +10,11 @@ The following diagram shows the demo environment created once it is installed on
 
 ### Quick View of Major Changes
 
+Note: The lowest in the list is the latest change.
+
 * Added Promethues and Grafana monitoring.
 * Simplified installation steps.
+* Enable Red Hat ServiceMesh, an Istio based solution.
 
 ### Product Vesions
 These are product version when this demo is developed. However it should work on other versions provided the products required are supported / can be technically deployed on the OpenShift version.
@@ -19,6 +22,11 @@ These are product version when this demo is developed. However it should work on
 * OpenShift Container Platform 4.*
 * Prometheus Operator Community 0.32.0
 * Red Hat AMQ Streams Operator 1.4.1
+* Red Hat ServiceMesh Operator 1.0.2
+* Kiali Operator 1.0.7 by Red Hat
+* Jaeger Operator 1.13.1 by Red Hat
+* ElasticeSearch Operator 4.2.4-201911050122 by Red Hat
+
 
 ### Components in The Demo
 
@@ -133,14 +141,24 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 ### Pre-Requisitions
 
 * You will need to have jq command line install on your PC. Please proceed to download and install from https://stedolan.github.io/jq/. Make sure the executable is configured at PATH variable and accessible from command line.
-* You should have Red Hat AMQ Streams Operator installed by your cluster-admin. For simplicity, install the operator for all namespaces.
+* You should have the following Operators installed:
+  * Red Hat AMQ Streams Operator
+  * Prometheus Operator Community Version
+  * Red Hat AMQ Streams Operator
+  * Red Hat ServiceMesh Operator
+  * Kiali Operator by Red Hat
+  * Jaeger Operator by Red Hat
+  * ElasticeSearch Operator 4.2.4-201911050122 by Red Hat
+  
+  For simplicity, install the operators for all namespaces if possible.
 * You need to have oc command line tool installed on your local PC.
-* You need to have access to Red Hat website to download [AMQ Streams OpenShift Installation and Example Files](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=jboss.amq.streams)
 * You need to logon to OpenShift with **cluster-admin** role user before running the installation secipt. Typical use case you will not need to use cluster-admin role for apps and container deployment. But it is required because we automate lots of steps in the installer thats some of the steps require cluster-admin access to execute.
-* You need to have openssl and keytool installed on your PC. The installer uses openssl and keytool to automate the RHSSO certs and keys creations.
-* You should have Prometheus Operator installed.
-* Pre-created the necessary OCP projects for RHSSO and the application project.
-* PVs are required. I have no time to list them all here. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
+* You need to have openssl and keytool installed on your PC. The installer uses openssl and keytool to automate certs and keys creations.
+* Pre-created the necessary OCP projects for the following:
+  * RHSSO
+  * The applications
+  * The Red Hat ServiceMesh / Istio core system.
+* PVs are required. Impossible foe me to list them all here now. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
 
 ### Installation Steps
 
@@ -148,19 +166,28 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 
 2. Create the required OCP projects to deploy this demo:
 
-* Project for RHSSO. Example: `rhsso`
-* Project for the demo applications and containers. Example: `paygate`
+  * Project for RHSSO. Example: `paygate-rhsso`
+  * Project for the demo applications and containers. Example: `paygate`
+  * Project for Red Hat ServiceMesh core system. Example: `paygate-istio-system`  
 
-3. With cluster-admin role, deploy the following operators:
-
-* Red Hat AMQ Streams Operator
-* Prometheus Operator
+3. With cluster-admin role, deploy the operators listed in the **Pre-Requisitions Section**.
 <br><br>Please refer to [Deploying Promethues and Grafana on OpenShift](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for more detail.
 
-4. Finally, run the following command to change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory. Follow through the installation prompts.
+4. Finally, change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory. Follow through the installation prompts.
 ```
 cd bin 
 ./deployDemo.sh -i
+```
+
+**Note:**
+
+* There maybe situation where some of the PODs does not have injected Istio sidecar. This is because the PODs are deployed before the Istio is ready. Run the following command to redeploy the PODs:
+```
+./deployDemo.sh -rd
+```
+* The RHSSO is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO project and run the following command to recreate the RHSSO:
+```
+./deployDemo.sh -sso
 ```
 
 ## Post Installation Configurations
@@ -175,20 +202,20 @@ cd bin
 ```
 templates/grafana/grafanadashboard_payment_gateway_overview.json
 ```
-Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#assembly-metrics-grafana-str) for more details.
+
+![Payment Gateway Grafana Dashboard](images/payment_gateway_grafana_dashboard.png)
 
 4. There are pre-defined AMQ Streams dashboard examples which you can import into the Grafana. These sample JSON files are located in `templates/kafka/metrics/grafana-dashboards`
-
-* strimzi-kafka.json
-* strimzi-kafka-connect.json
-* strimzi-zookeeper.json
-* strimzi-kafka-exporter.json
+<br>
+  * strimzi-kafka.json
+  * strimzi-kafka-connect.json
+  * strimzi-zookeeper.json
 <br><br>
 Refer [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for detail.
 <br><br>
-The following shows the screen shots of the Grafana Dashboards after they are imported.
+Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#assembly-metrics-grafana-str) for more details.
 <br><br>
-![Payment Gateway Grafana Dashboard](images/payment_gateway_grafana_dashboard.png)
+The following shows the screen shots of the Grafana Dashboards after they are imported.
 <br><br>
 ![Zookeeper Grafana Dashboard](images/zookeeper_grafana_dashboard.png)
 <br><br>
@@ -197,7 +224,7 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 ![Kafka Connect Grafana Dashboard](images/kafka_connect_grafana_dashboard.png)
 
 ### Accessing The Customer UI
-1. Browse to OpenShift admin console and click on the customer-ui route to access the demo UI.<br><br>
+1. Browse to OpenShift admin console. Goto the `paygate-istio-system` project and click on the customer-ui route to access the demo UI.<br><br>
 ![Customer UI](images/customer-ui_route.png)
 <br>
 
@@ -213,6 +240,20 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 <br><br>
 ![Customer UI transfer money success page](images/customer_ui_transfermoney_success.png)
 <br>
+
+## Screen Shots of Red Hat ServiceMesh / Istio
+* Istion OpenShift Routes
+<br><br>
+![Istio Routes](images/istio_routes.png)
+<br><br>
+* Istio Kiali
+<br><br>
+![Istio Kiali](images/istio_kiali.png)
+<br><br>
+* Istio - Kiali with Jaeger
+<br><br>
+![Istion Kiali with Jaeger](images/istio_kiali_jaeger.png)
+<br><br>
 
 ## Additional Information
 
