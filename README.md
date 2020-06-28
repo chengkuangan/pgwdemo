@@ -268,6 +268,8 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 
 ![ServiceMesh Kiali with Jaeger](images/istio_kiali_jaeger.png)
 <br><br>
+Refers 
+[Uniform Way to Connect, Secure and Monitor Microservice Applications with Red Hat ServiceMesh](https://braindose.blog/2020/06/28/uniform-way-secure-monitor-microservice-red-hat-servicemesh/) for more detail.
 
 ## Additional Information
 
@@ -275,3 +277,4 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 * [Implementing Camel Integration Service with Apache Camel](http://braindose.blog/2020/06/05/implementing-integration-service-with-red-hat-fuse-apache-camel/).
 * [How to Create A MongoDB Kafka Connect Container Image for OpenShift](http://braindose.blog/2020/06/11/how-create-mongodb-kafka-connect-container-openshift/)
 * [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/)
+* [Uniform Way to Connect, Secure and Monitor Microservice Applications with Red Hat ServiceMesh](https://braindose.blog/2020/06/28/uniform-way-secure-monitor-microservice-red-hat-servicemesh/)
