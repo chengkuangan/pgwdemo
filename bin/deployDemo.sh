@@ -33,6 +33,13 @@ INSTALL_PROMETHEUS="no"
 INSTALL_BASIC_DEMO="no"
 ### ------
 
+RED='\033[1;31m'
+NC='\033[0m' # No Color
+GREEN='\033[1;32m'
+BLUE='\033[1;34m'
+PURPLE='\033[1;35m'
+YELLOW='\033[1;33m'
+
 # TODO Move all dashboards to ServiceMesh's Grafana
 # TODO Remove fuse console, it seems not supporting istio
 function init(){
@@ -43,18 +50,43 @@ function init(){
     
     if [ $? -ne 0 ] || [ "$OC_USER" = "" ]; then
         echo
-        echo "Please login to Openshift before proceed..."
+        printWarning "Please login to Openshift before proceed ..."
         echo
         exit 0
     fi
     echo
-    echo "--> Creating temporary directory ../tmp "
+    printHeader "--> Creating temporary directory ../tmp"
     mkdir ../tmp
+}
+
+function printTitle(){
+    HEADER=$1
+    echo -e "${RED}$HEADER${NC}"
+}
+
+function printHeader(){
+    HEADER=$1
+    echo -e "${YELLOW}$HEADER${NC}"
+}
+
+function printLink(){
+    LINK=$1
+    echo -e "${GREEN}$LINK${NC}"
+}
+
+function printCommand(){
+    COMMAND=$1
+    echo -e "${GREEN}$COMMAND${NC}"
+}
+
+function printWarning(){
+    WARNING=$1
+    echo -e "${RED}$WARNING${NC}"
 }
 
 function printVariables(){
     echo 
-    echo "The following is the parameters enter..."
+    printHeader "The following is the parameters enter..."
     echo
     echo "APPS_NAMESPACE = $APPS_NAMESPACE"
     echo "APPS_PROJECT_DISPLAYNAME = $APPS_PROJECT_DISPLAYNAME"
@@ -75,13 +107,13 @@ function printVariables(){
 function preRequisitionCheck(){
     
     echo 
-    echo "--> Checking on pre-requisitions ..."
+    printHeader "--> Checking on pre-requisitions ..."
     echo
     
     ## --- Check if the Kafka yaml files are in the kafka-resource folder
     if [ ! -d "../kafka-resources/install/cluster-operator" ]; then
         echo
-        echo "Missing AMQ Streams OCP Install YMAL files..."
+        printWarning "Missing AMQ Streams OCP Install YMAL files..."
         echo
         echo "Please download AMQ Streams OCP Install YAML files from Red Hat website and place them into the kafka-resources directory."
         echo "The directory structure should looks something like this..."
@@ -97,7 +129,8 @@ function preRequisitionCheck(){
     
     if [ $? -ne 0 ]; then
         echo
-        echo "You will required jq command line JSON processor ... "
+        printWarning "You will required jq command line JSON processor ... "
+        echo
         echo "Please download and install the command line tool from here ... https://stedolan.github.io/jq/"
         echo
         removeTempDirs
@@ -108,7 +141,8 @@ function preRequisitionCheck(){
     
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have the following OpenShift projects created before proceed ... "
+        printWarning "Please ensure you have the following OpenShift projects created before proceed ... "
+        echo
         echo "   * $RHSSO_NAMESPACE"
         echo "   * $APPS_NAMESPACE"
         echo "   * $ISTIO_SYSTEM_NAMESPACE"
@@ -121,7 +155,8 @@ function preRequisitionCheck(){
 
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have the following OpenShift projects created before proceed ... "
+        printWarning "Please ensure you have the following OpenShift projects created before proceed ... "
+        echo
         echo "   * $RHSSO_NAMESPACE"
         echo "   * $APPS_NAMESPACE"
         echo "   * $ISTIO_SYSTEM_NAMESPACE"
@@ -133,7 +168,8 @@ function preRequisitionCheck(){
     oc project $ISTIO_SYSTEM_NAMESPACE
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have the following OpenShift projects created before proceed ... "
+        printWarning "Please ensure you have the following OpenShift projects created before proceed ... "
+        echo
         echo "   * $RHSSO_NAMESPACE"
         echo "   * $APPS_NAMESPACE"
         echo "   * $ISTIO_SYSTEM_NAMESPACE"
@@ -145,7 +181,8 @@ function preRequisitionCheck(){
     oc get sub --all-namespaces -o custom-columns=NAME:.metadata.name | grep 'elastic'
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have installed the following Operators ... "
+        printWarning "Please ensure you have installed the following Operators ... "
+        echo
         echo "   * Elasticsearch"
         echo
         removeTempDirs
@@ -155,7 +192,8 @@ function preRequisitionCheck(){
     oc get sub --all-namespaces -o custom-columns=NAME:.metadata.name | grep 'jaeger'
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have installed the following Operators ... "
+        printWarning "Please ensure you have installed the following Operators ... "
+        echo
         echo "   * Jaeger"
         echo
         removeTempDirs
@@ -165,7 +203,8 @@ function preRequisitionCheck(){
     oc get sub --all-namespaces -o custom-columns=NAME:.metadata.name | grep 'kiali'
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have installed the following Operators ... "
+        printWarning "Please ensure you have installed the following Operators ... "
+        echo
         echo "   * Kiali"
         echo
         removeTempDirs
@@ -175,7 +214,8 @@ function preRequisitionCheck(){
     oc get sub --all-namespaces -o custom-columns=NAME:.metadata.name | grep 'servicemesh\|service-mesh'
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have installed the following Operators ... "
+        printWarning "Please ensure you have installed the following Operators ... "
+        echo
         echo "   * ServiceMesh"
         echo
         removeTempDirs
@@ -185,7 +225,8 @@ function preRequisitionCheck(){
     oc get sub --all-namespaces -o custom-columns=NAME:.metadata.name | grep 'amq-streams'
     if [ $? -ne 0 ]; then
         echo
-        echo "Please ensure you have installed the following Operators ... "
+        printWarning "Please ensure you have installed the following Operators ... "
+        echo
         echo "   * AMQ Streams"
         echo
         removeTempDirs
@@ -195,76 +236,22 @@ function preRequisitionCheck(){
     oc get sub -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep prometheus
     if [ $? -ne 0 ]; then
         echo
-        echo "Please install Promethues Operator in namespace $APPS_NAMESPACE"
+        printWarning "Please install Promethues Operator in namespace $APPS_NAMESPACE"
         echo
         removeTempDirs
         exit 0
     fi
 }
 
-
-# @Deprecated
-function updateKafkaResourcesFiles(){
-    ## --- Update Kafka *RoleBinding*.yaml files
-    if [ $DEPLOY_KAFKA_OPERATOR = "yes" ]; then
-        echo 
-        echo "--> Changing all namespace entries in install/cluster-operator/*RoleBinding*.yaml to $KAFKA_OPERATOR_NAMESPACE"
-        sed -i -e 's/namespace: .*/namespace: '"$KAFKA_OPERATOR_NAMESPACE"'/' ../kafka-resources/install/cluster-operator/*RoleBinding*.yaml
-    fi
-
-    ## --- Update kafka cluster name
-    echo
-    echo "--> Changing Kafka.metadata.name property value to $KAFKA_CLUSTER_NAME in ../kafka-resources/examples/kafka/kafka-persistent.yaml"
-    sed -i -e "s/name: .*/name: $KAFKA_CLUSTER_NAME/" ../kafka-resources/examples/kafka/kafka-persistent.yaml
-    #sed -i -e '' 's/name: .*/name: '"$KAFKA_CLUSTER_NAME"'/' ../kafka-resources/examples/kafka/kafka-persistent.yaml
-    # sed -i -e 's/name: .*/name: $KAFKA_NAMESPACE-kafka-cluster/' ../kafka-resources/examples/kafka/kafka-persistent.yaml
-    
-    count=$(grep -c "topicOperator:" ../kafka-resources/examples/kafka/kafka-persistent.yaml)
-
-    #sed -i -e 's/.*entityOperator.*/ /' ../kafka-resources/examples/kafka/kafka-persistent.yaml
-    #sed -i -e 's/.*topicOperator.*/ /' ../kafka-resources/examples/kafka/kafka-persistent.yaml
-    #sed -i -e 's/.*userOperator.*/ /' ../kafka-resources/examples/kafka/kafka-persistent.yaml
-    
-    if [ $count = 0 ]; then
-        echo
-        echo "--> Appending Kafka Topic Operator settings into ../kafka-resources/examples/kafka/kafka-persistent.yaml"
-        echo "  entityOperator:" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo "    topicOperator:" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo "      watchedNamespace: $KAFKA_NAMESPACE" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo "      reconciliationIntervalSeconds: 90" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo "      zookeeperSessionTimeoutSeconds: 20" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo "      topicMetadataMaxAttempts: 6" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo "      image: registry.redhat.io/amq7/amq-streams-operator:1.3.0" >> ../kafka-resources/examples/kafka/kafka-persistent.yaml
-        echo
-    fi
-
-    ## --- Update kafka connect yaml file
-    echo
-    echo "--> Changing properties in ../kafka-resources/examples/kafka-connect/kafka-connect.yaml"
-    sed -i -e 's/name: .*/name: mongodb-connect-cluster/' ../kafka-resources/examples/kafka-connect/kafka-connect.yaml
-    sed -i -e 's/bootstrapServers: .*/bootstrapServers: '"$KAFKA_NAMESPACE"'-kafka-cluster-kafka-bootstrap:9093/' ../kafka-resources/examples/kafka-connect/kafka-connect.yaml
-    # sed -i -e 's/bootstrapServers: .*/bootstrapServers: '"$KAFKA_NAMESPACE"'-kafka-cluster-kafka-bootstrap:9093/' ../kafka-resources/examples/kafka-connect/kafka-connect.yaml
-    sed -i -e 's/secretName: .*/secretName: '"$KAFKA_NAMESPACE"'-kafka-cluster-cluster-ca-cert/' ../kafka-resources/examples/kafka-connect/kafka-connect.yaml
-    echo "  image: docker.io/chengkuan/amq-streams-kafka-connect-23:1.3.0" >> ../kafka-resources/examples/kafka-connect/kafka-connect.yaml
-    echo
-
-}
-
 function deployKafka(){
-    # ---- Not in used now, temporary remove for future improvement ...
-    #if [ $DEPLOY_KAFKA_OPERATOR = "yes" ]; then
-    #    echo 
-    #    echo "--> Deploying AMQ Streams (Kafka) Operator now ... Using ../kafka-resources/install/cluster-operator ... "
-    #    oc apply -f ../kafka-resources/install/cluster-operator -n $KAFKA_OPERATOR_NAMESPACE
-    #fi
     echo
-    echo "--> Modifying ../templates/kafka/kafka-persistent.yaml"
+    printHeader "--> Modifying ../templates/kafka/kafka-persistent.yaml"
     echo
     mkdir ../tmp/kafka
     cp ../templates/kafka/kafka-persistent.yaml ../tmp/kafka/kafka-persistent.yaml
     sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/kafka-persistent.yaml
     echo 
-    echo "--> Deploying AMQ Streams (Kafka) Cluster now ... Using ../kafka-resources/examples/kafka/kafka-persistent.yaml ..."
+    printHeader "--> Deploying AMQ Streams (Kafka) Cluster now ... Using ../kafka-resources/examples/kafka/kafka-persistent.yaml ..."
     oc apply -f ../tmp/kafka/kafka-persistent.yaml -n $APPS_NAMESPACE
     echo
 }
@@ -272,7 +259,8 @@ function deployKafka(){
 ## --- Deploy CreditResponse MongoDB
 function deployCRMDB(){
     echo 
-    echo "--> Deploying Credit Response Mongodb database ..."
+    printHeader "--> Deploying Credit Response Mongodb database ..."
+    echo
     # TODO enable prometheus for mongodb
     oc new-app -f ../templates/creditresponse-mongodb-deployment-template.yaml -n $APPS_NAMESPACE
 }
@@ -280,7 +268,7 @@ function deployCRMDB(){
 ## --- Perform necessary configuration after CreditResponse MongoDB POD is ready
 function postDeployCreditResponseMongoDBConfig(){
     echo
-    echo "--> Perfoming post deployment configuration ... "
+    printHeader "--> Perfoming post deployment configuration ... "
     echo 
     echo "Patching Credit Response Mongodb ..."
     # CREDITRESPONSE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep $CREDITRESPONSE_MONGODB_NAME.[a-z0-9].[^deploy])"
@@ -310,7 +298,8 @@ function postDeployCreditResponseMongoDBConfig(){
 # ----- Deploy Kafka Connect
 function deployKafkaConnect(){
     echo
-    echo "--> Deploy Kafka Connect ..."
+    printHeader "--> Deploy Kafka Connect ..."
+    echo
     echo "Waiting for Kafka to be ready ..."
     KAFKA_POD_READY="$(oc get pod $KAFKA_CLUSTER_NAME-kafka-0 -o custom-columns=Ready:status.containerStatuses[0].ready --no-headers -n $APPS_NAMESPACE)"
     while [ $? -ne 0 ]
@@ -333,8 +322,8 @@ function deployKafkaConnect(){
 ## --- configure kafka connect for Credit Response mongodb
 function configureKafkaConnect4CRMDB(){
     echo
-    echo "--> Configuring Kafka Connect for CreditResponse Mongodb ... "
-
+    printHeader "--> Configuring Kafka Connect for CreditResponse Mongodb ... "
+    echo
     #MONGODB_KAFKA_CONNECT_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep mongodb-connect-cluster-connect)"
     MONGODB_KAFKA_CONNECT_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep mongodb-connect-cluster-connect-[a-z0-9] | grep -v mongodb-connect-cluster-connect-[a-z0-9]-deploy)"
     # oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep mongodb-connect-cluster-connect)
@@ -368,7 +357,7 @@ function configureKafkaConnect4CRMDB(){
 # ----- Deploy RHSSO and configure the necessary realms and users.
 function deployRHSSO(){
     echo 
-    echo "--> Deploy RHSSO ..."
+    printHeader "--> Deploy RHSSO ..."
     echo
 
     #oc new-project $RHSSO_NAMESPACE
@@ -455,13 +444,13 @@ function deployRHSSO(){
     MESSAGE=$(oc -n $RHSSO_NAMESPACE exec $SSO_POD_NAME -- curl -k -X POST "http://sso:8080/auth/realms/master/protocol/openid-connect/token" -H "Content-Type: application/x-www-form-urlencoded" -d "username=$SSO_ADMIN_USERNAME" -d "password=$SSO_ADMIN_PASSWORD" -d "grant_type=password" -d "client_id=admin-cli")
     if [[ $MESSAGE == *"error_code"* ]] ; then
         echo
-        echo "Error getting access token from RHSSO at Pod:$SSO_POD_NAME. Please check the log for more details."
+        printWarning "Error getting access token from RHSSO at Pod:$SSO_POD_NAME. Please check the log for more details."
     else
         TOKEN=$(echo $MESSAGE | jq -r '.access_token')
         MESSAGE=$(oc -n $RHSSO_NAMESPACE exec $SSO_POD_NAME -- curl -k -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d @/tmp/paymentgateway-realm.json http://sso:8080/auth/admin/realms)
         if [[ $MESSAGE == *"error_code"* ]] ; then
             echo
-            echo "Error importing PaymentGateway Realm. Using $SSO_POD_NAME:/tmp/paymentgateway-realm.json"
+            printWarning "Error importing PaymentGateway Realm. Using $SSO_POD_NAME:/tmp/paymentgateway-realm.json"
         fi
     fi
 
@@ -476,7 +465,7 @@ function deployRHSSO(){
 # ----- Build and deploy Account Service
 function deployAccountService(){
     echo
-    echo "--> Deploying Account Service and DB Service ... "
+    printHeader "--> Deploying Account Service and DB Service ... "
     echo
 
     echo
@@ -492,15 +481,12 @@ function deployAccountService(){
     # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
     oc annotate --overwrite svc accountservice prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
 
-    
-    
-
 }
 
 # ----- Build and deploy Credit Service
 function deployCreditService(){
     echo
-    echo "--> Deploying Credit Services ... "
+    printHeader "--> Deploying Credit Services ... "
     echo
 
     echo
@@ -523,7 +509,7 @@ function deployCreditService(){
 function deployEventCorrelator(){
 
     echo
-    echo "--> Deploying Event Correlator Services ... "
+    printHeader "--> Deploying Event Correlator Services ... "
     echo
 
     echo
@@ -548,7 +534,7 @@ function deployEventCorrelator(){
 function deployAccountProfile(){
 
     echo
-    echo "--> Deploying Account Profile services ... "
+    printHeader "--> Deploying Account Profile services ... "
     echo
     
     echo
@@ -570,7 +556,7 @@ function deployAccountProfile(){
 function deployCustomerCamelService(){
 
     echo
-    echo "--> Deploying Customer Camel Services ... "
+    printHeader "--> Deploying Customer Camel Services ... "
     echo 
 
     
@@ -596,7 +582,7 @@ function deployCustomerCamelService(){
 # ----- Build and deploy Customer UI
 function deployCustomerUI(){
     echo
-    echo "--> Deploying Customer UI ... "
+    printHeader "--> Deploying Customer UI ... "
     echo
 
     echo
@@ -623,7 +609,7 @@ function deployCustomerUI(){
 function importSampleData(){
    
     echo
-    echo "--> Importing demo data for AccountService mongodb ... "
+    printHeader "--> Importing demo data for AccountService mongodb ... "
     echo
 
     ACCOUNT_SERVICE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep accountservice-mongodb-[a-z0-9] | grep -v accountservice-mongodb-[a-z0-9]-deploy)"
@@ -650,7 +636,7 @@ function importSampleData(){
     oc -n $APPS_NAMESPACE exec $ACCOUNT_SERVICE_MONGODB_POD_NAME -c accountservice-mongodb  -- /opt/rh/$MONGODB_PATH/root/bin/mongoimport --db accountservice --collection balance --authenticationDatabase accountservice --username accountservice --password accountservice --drop --file /tmp/sampledata.json
 
     echo
-    echo "--> Importing demo data for AccountProfile mongodb ... "
+    echo "Importing demo data for AccountProfile mongodb ... "
     echo
 
     ACCOUNT_PROFILE_MONGODB_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep accountprofile-mongodb-[a-z0-9] | grep -v accountprofile-mongodb-[a-z0-9]-deploy)"
@@ -680,7 +666,7 @@ function importSampleData(){
 # ----- Remove all tmp content after completed.
 function removeTempDirs(){
     echo
-    echo "--> Removing ../tmp directory ... "
+    printHeader "--> Removing ../tmp directory ... "
     echo
     rm -rf ../tmp
 }
@@ -688,84 +674,96 @@ function removeTempDirs(){
 # ----- read user inputs for installation parameters
 function readInput(){
     INPUT_VALUE=""
-    echo "Please provides the following parameter values. (Enter q to quit)"
+    echo
+    printHeader "Please provides the following parameter values. (Enter q to quit)"
+    echo
     while [ "$INPUT_VALUE" != "q" ]
     do  
-        printf "Namespace [$APPS_NAMESPACE]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            APPS_NAMESPACE="$INPUT_VALUE"
+        if [ "$REINSTALL_RHSSO" != "yes" ]; then
+            printf "Namespace [$APPS_NAMESPACE]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                APPS_NAMESPACE="$INPUT_VALUE"
+            fi
+
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
+        fi  
+
+        if [ "$RESTART_DEPLOYMENT" != "yes" ]; then
+            printf "RHSSO Namespace [$RHSSO_NAMESPACE]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                RHSSO_NAMESPACE="$INPUT_VALUE"
+            fi
+
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
         fi
 
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
+        if [ "$REINSTALL_RHSSO" != "yes" ] && [ "$RESTART_DEPLOYMENT" != "yes" ]; then
+            printf "Istio System Namespace [$ISTIO_SYSTEM_NAMESPACE]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                ISTIO_SYSTEM_NAMESPACE="$INPUT_VALUE"
+            fi
+
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
         fi
 
-        printf "RHSSO Namespace [$RHSSO_NAMESPACE]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            RHSSO_NAMESPACE="$INPUT_VALUE"
+        if [ "$RESTART_DEPLOYMENT" != "yes" ]; then
+            printf "Apps Domain Name [$APP_DOMAIN_NAME]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                APP_DOMAIN_NAME=$INPUT_VALUE
+            fi
+
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
         fi
 
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
-        fi
+        if [ "$REINSTALL_RHSSO" != "yes" ] && [ "$RESTART_DEPLOYMENT" != "yes" ]; then
+            printf "Kafka Cluster Name [$KAFKA_CLUSTER_NAME]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                KAFKA_CLUSTER_NAME=$INPUT_VALUE
+            fi
 
-        printf "Istio System Namespace [$ISTIO_SYSTEM_NAMESPACE]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            ISTIO_SYSTEM_NAMESPACE="$INPUT_VALUE"
-        fi
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
+            
+            printf "Slack API URL [$STRIMZI_SLACKAPI_URL]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                STRIMZI_SLACKAPI_URL=$INPUT_VALUE
+            fi
 
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
-        fi
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
 
-        printf "Apps Domain Name [$APP_DOMAIN_NAME]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            APP_DOMAIN_NAME=$INPUT_VALUE
-        fi
-
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
-        fi
-
-        printf "Kafka Cluster Name [$KAFKA_CLUSTER_NAME]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            KAFKA_CLUSTER_NAME=$INPUT_VALUE
-        fi
-
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
-        fi
-        
-        printf "Slack API URL [$STRIMZI_SLACKAPI_URL]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            STRIMZI_SLACKAPI_URL=$INPUT_VALUE
-        fi
-
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
-        fi
-
-        printf "Slack Channel [$STRIMZI_SLACK_CHANNEL]:"
-        read INPUT_VALUE
-        if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-            STRIMZI_SLACK_CHANNEL=$INPUT_VALUE
-        fi
-        
-        if [ "$INPUT_VALUE" = "q" ]; then
-            removeTempDirs
-            exit 0
+            printf "Slack Channel [$STRIMZI_SLACK_CHANNEL]:"
+            read INPUT_VALUE
+            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+                STRIMZI_SLACK_CHANNEL=$INPUT_VALUE
+            fi
+            
+            if [ "$INPUT_VALUE" = "q" ]; then
+                removeTempDirs
+                exit 0
+            fi
         fi
 
         INPUT_VALUE="q"
@@ -782,7 +780,7 @@ function readInput(){
 function deployFuseConsole(){
     
     echo
-    echo "--> Deploying Fuse Console ... "
+    printHeader "--> Deploying Fuse Console ... "
     echo
 
     mkdir ../tmp/fuseconsole
@@ -832,7 +830,7 @@ function deployFuseConsole(){
 function deployNConfigurePrometheus(){
 
     echo
-    echo "--> Deploying Prometheus and AlertManager for Kafka ... "
+    printHeader "--> Deploying Prometheus and AlertManager for Kafka ... "
     echo
     
     echo
@@ -886,15 +884,15 @@ function deployNConfigurePrometheus(){
     sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/grafanadashboard_payment_gateway_overview.json
 
     echo
-    echo "Please refer to the following for guide on enabling the Grafana dashboard for Kafka ... "
+    printHeader "Please refer to the following for guide on enabling the Grafana dashboard for Kafka ... "
     echo
-    echo "https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#proc-metrics-grafana-dashboard-str"
+    printLink "https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#proc-metrics-grafana-dashboard-str"
     echo
 }
 
 function installServiceMesh(){
     echo 
-    echo "--> Installing the Service Mesh ..."
+    printHeader "--> Installing the Service Mesh ..."
     echo
     # Updating with istio system namespace
     mkdir -p ../tmp/istio
@@ -913,7 +911,7 @@ function installServiceMesh(){
 
 function configureServiceMeshNetwork(){
     echo 
-    echo "--> Configuring the Service Mesh Policy ..."
+    printHeader "--> Configuring the Service Mesh Policy ..."
     echo
     
     cp ../templates/istio/istio-apps-routes.yaml ../tmp/istio/istio-apps-routes.yaml
@@ -934,8 +932,9 @@ function configureServiceMeshNetwork(){
 function restartDeployment(){
     if [ "$RESTART_DEPLOYMENT" = "yes" ]; then
         echo 
-        echo "Restarting Payment Gateway application deployments ..."
+        printHeader "Restarting Payment Gateway application deployments ..."
         echo
+        showConfirmToProceed
         oc rollout restart deployment/accountprofile -n $APPS_NAMESPACE
         oc rollout restart deployment/accountprofile-mongodb -n $APPS_NAMESPACE
         oc rollout restart deployment/accountservice -n $APPS_NAMESPACE
@@ -970,17 +969,24 @@ function printCmdUsage(){
 
 function printHelp(){
     printCmdUsage
-    echo "The following is a quick list of the installer requirements:"
+    printHeader "The following is a quick list of the installer requirements:"
+    echo
     echo "    * The required OpenShift projects are created."
     echo "    * keytool is installed on your system."
     echo "    * openssl is installed on your system."
     echo "    * jq is installed on your system."
-    echo "    * Kafka Operator is installed on OpenShift."
-    echo "    * Promethues Operator is installed in the same namespace as the demo apps. This is only required if Promethues is to be installed."
     echo "    * An Openshift user with cluster-admin role."
+    echo "    * The following Operators are installed:"
+    echo "      - Red Hat AMQ Streams"
+    echo "      - Red Hat ServiceMesh"
+    echo "      - Jaeger"
+    echo "      - Kiali"
+    echo "      - ElasticSearch"
+    echo "      - Prometheus"
     echo
-    echo "Refer to the following website for the complete guide ..."
-    echo "https://github.com/chengkuangan/pgwdemo"
+    printHeader "Refer to the following website for the complete and updated guide ..."
+    echo
+    printLink "https://github.com/chengkuangan/pgwdemo"
     echo
 }
 
@@ -988,40 +994,45 @@ function printResult(){
     echo 
     echo "=============================================================================================================="
     echo 
-    echo " Payment Gateway Installation Completed !!! "
+    printTitle "PAYMENT GATEWAY INSTALLATION COMPLETED !!!"
     echo
-    echo " You can access to the demo at the following URLs:"
     echo
-    echo " Customer UI - http://customer-ui-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
-    echo "      Account:"
-    echo "          - john/password"
-    echo "          - jenny/password"
+    printHeader " You can access to the demo at the following URLs:"
     echo
-    echo " Apps Grafana - http://grafana-$APPS_NAMESPACE.$APP_DOMAIN_NAME"
-    echo "      Account: Use the openshift username to login."
+    echo -e " * Customer UI - ${GREEN}http://customer-ui-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME ${NC}"
+    echo "   Account:"
+    echo "      - john/password"
+    echo "      - jenny/password"
     echo
-    echo " Fuse Console - http://fuse76-console-route-$APPS_NAMESPACE.$APP_DOMAIN_NAME"
+    echo -e " * Apps Grafana - ${GREEN}http://grafana-$APPS_NAMESPACE.$APP_DOMAIN_NAME${NC}"
+    echo "   Account: Use the openshift username to login."
+    echo
+    #echo " Fuse Console - http://fuse76-console-route-$APPS_NAMESPACE.$APP_DOMAIN_NAME"
+    #echo "      Account: Use the openshift username to login"
+    #echo
+    echo -e " * RHSSO Admin Console - ${GREEN}http://sso-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME${NC} or ${GREEN}https://secure-sso-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME${NC}"
+    echo "   Account:"
+    echo "      - $SSO_ADMIN_USERNAME/$SSO_ADMIN_PASSWORD"
+    echo
+    echo " * ServiceMesh Services: "
+    echo -e "   Kiali - ${GREEN}http://kiali-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME${NC}"
+    echo -e "   Prometheus - ${GREEN}http://prometheus-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME${NC}"
+    echo -e "   Grafana - ${GREEN}http://grafana-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME${NC}"
     echo "      Account: Use the openshift username to login"
     echo
-    echo " RHSSO Admin Console - http://sso-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME or https://secure-sso-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME"
-    echo "      Account:"
-    echo "          - $SSO_ADMIN_USERNAME/$SSO_ADMIN_PASSWORD"
+    printHeader " Additional Notes:"
+    echo " -----------------"
     echo
-    echo " ServiceMesh Services: "
-    echo "      Kiali - http://kiali-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
-    echo "      Prometheus - http://prometheus-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
-    echo "      Grafana - http://grafana-$ISTIO_SYSTEM_NAMESPACE.$APP_DOMAIN_NAME"
-    echo "          Account: Use the openshift username to login"
-    echo
-    echo " There might be situation some of the Applications shown on Kiali console with \"Missing Sidecar\". " 
-    echo " This is because the applications deployed before ServiceMesh is ready. Please run the following command "
-    echo " to redeploy the applications."
+    echo -e " * There might be situation some of the applications shown on Kiali console with ${RED}Missing Sidecar${NC}. " 
+    echo "   This is because the applications deployed before ServiceMesh is ready. Please run the following command "
+    echo "   to redeploy the applications."
     echo 
-    echo "      ./deploy.sh -rd"
+    printCommand "      ./deploy.sh -rd"
     echo
-    echo " The RHSSO installed is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO project and run the following command to recreate the RHSSO:"
+    echo -e " * The installed RHSSO is ${RED}ephemeral${NC}. The configurations will be lost if the POD restarted or the OpenShift server restarted. "
+    echo "   If this happens, please delete the RHSSO project and run the following command to recreate the RHSSO:"
     echo 
-    echo "      ./deployDemo.sh -sso"
+    printCommand "      ./deployDemo.sh -sso"
     echo
     echo "=============================================================================================================="
     echo
@@ -1082,14 +1093,16 @@ function installBaseDemo(){
 
 function showConfirmToProceed(){
     echo
-    echo "Press ENTER (OR Ctrl-C to cancel) to proceed..."
+    printWarning "Press ENTER (OR Ctrl-C to cancel) to proceed..."
     read bc
 }
 
 function reinstallRHSSO(){
     if [ "$REINSTALL_RHSSO" = "yes" ]; then
+        echo 
+        printHeader "--> Reinstalling RHSSO ... "
         echo
-        echo "If you are reusing the same namespace, please delete the existing namespace using \"oc delete project $RHSSO_NAMESPACE\" before proceed."
+        printWarning "If you are reusing the same namespace, please delete the existing namespace using \"oc delete project $RHSSO_NAMESPACE\" before proceed."
         showConfirmToProceed
         oc new-project $RHSSO_NAMESPACE
         deployRHSSO
@@ -1111,15 +1124,15 @@ if [ "$PROCEED_INSTALL" != "yes" ]; then
     exit 0
 fi
 
-echo "Please ensure you had installed the following Operator before proceed ..."
-echo
-echo "   * Red Hat ServiceMesh Operator"
-echo "   * Red Hat ElasticSearch Operator"
-echo "   * Red Hat Jaeger Operator"
-echo "   * Red Hat Kiali Operator"
-echo "   * Red Hat AMQ Streams Operator"
-echo "   * Prometheus Operator"
-echo
+#echo "Please ensure you had installed the following Operator before proceed ..."
+#echo
+#echo "   * Red Hat ServiceMesh Operator"
+#echo "   * Red Hat ElasticSearch Operator"
+#echo "   * Red Hat Jaeger Operator"
+#echo "   * Red Hat Kiali Operator"
+#echo "   * Red Hat AMQ Streams Operator"
+#echo "   * Prometheus Operator"
+#echo
 
 showConfirmToProceed
 deployNConfigurePrometheus
