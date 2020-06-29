@@ -273,7 +273,7 @@ Refers
 
 ## Recorded Videos
 Refers to the following for the recorded videos:
-* [Payment Gateway Demo: Introduction](https://youtu.be/jy4ZXZ7gHb0)
+* [Payment Gateway Demo: Introduction](https://youtu.be/65-pW4oti5s)
 * [Payment Gateway Demo: The Demo](https://youtu.be/og4Dh4y6IUI)
 
 ## Additional Information
