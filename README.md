@@ -271,6 +271,11 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 Refers 
 [Uniform Way to Connect, Secure and Monitor Microservice Applications with Red Hat ServiceMesh](https://braindose.blog/2020/06/28/uniform-way-secure-monitor-microservice-red-hat-servicemesh/) for more detail.
 
+## Recorded Videos
+Refers to the following for the recorded videos:
+* [Payment Gateway Demo: Introduction](https://youtu.be/jy4ZXZ7gHb0)
+* [Payment Gateway Demo: The Demo](https://youtu.be/og4Dh4y6IUI)
+
 ## Additional Information
 
 * Refer to this [article](http://braindose.blog/2020/03/11/event-based-microservices-kafka-openshift/) that I had created sometime ago on how to implement some of the components that are used in this demo. Although the codes on this article may be outdated but it provides some well documented detail to get started.
