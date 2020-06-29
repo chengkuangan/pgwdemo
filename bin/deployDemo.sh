@@ -24,6 +24,8 @@ STRIMZI_SLACK_CHANNEL="#paygate-strimzi"
 PROCEED_INSTALL="no"
 REINSTALL_RHSSO="no"
 RESTART_DEPLOYMENT="no"
+NPM_MIRROR=""
+MAVEN_MIRROR_URL=""
 
 ### ------
 # @Deprecated
@@ -473,7 +475,7 @@ function deployAccountService(){
     echo
 
     mkdir -p ../tmp/accountservice && cp -r ../sc/AccountService/* ../tmp/accountservice/ && rm -f ../tmp/accountservice/README.adoc && rm -rf ../tmp/accountservice/target
-    oc new-build -n $APPS_NAMESPACE -e MAVEN_MIRROR_URL=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/maven-all-public/ -i redhat-openjdk18-openshift:1.4 --labels='app=accountservice,app-group=accountservice' --name='accountservice' --to='accountservice:latest' --binary=true
+    oc new-build -n $APPS_NAMESPACE -e MAVEN_MIRROR_URL=$MAVEN_MIRROR_URL -i redhat-openjdk18-openshift:1.4 --labels='app=accountservice,app-group=accountservice' --name='accountservice' --to='accountservice:latest' --binary=true
     oc start-build accountservice --from-file=../tmp/accountservice/ -n $APPS_NAMESPACE --wait
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountservice-templates.yaml -p APP_NAMESPACE=$APPS_NAMESPACE
@@ -493,7 +495,7 @@ function deployCreditService(){
     echo "Starts building image ... "
     echo
     mkdir -p ../tmp/creditservice && cp -r ../sc/Credit/* ../tmp/creditservice/ && rm -f ../tmp/creditservice/README.adoc && rm -rf ../tmp/creditservice/node_modules
-    oc new-build -n $APPS_NAMESPACE -e NPM_MIRROR=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/npm-registry/ -i nodejs:latest --labels='app=creditservice,app-group=creditservice' --name='creditservice' --to='creditservice:latest' --binary=true
+    oc new-build -n $APPS_NAMESPACE -e NPM_MIRROR=$NPM_MIRROR -i nodejs:latest --labels='app=creditservice,app-group=creditservice' --name='creditservice' --to='creditservice:latest' --binary=true
     oc start-build creditservice --from-file=../tmp/creditservice/ -n $APPS_NAMESPACE --wait
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true \
@@ -517,7 +519,7 @@ function deployEventCorrelator(){
     echo
 
     mkdir -p ../tmp/eventcorrelator && cp -r ../sc/EventCorrelator/* ../tmp/eventcorrelator/ && rm -f ../tmp/eventcorrelator/README.adoc && rm -rf ../tmp/eventcorrelator/target
-    oc new-build -n $APPS_NAMESPACE -e MAVEN_MIRROR_URL=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/maven-all-public/ -i redhat-openjdk18-openshift:1.4 --labels='app=event-correlator,app-group=event-correlator' --name='event-correlator' --to='event-correlator:latest' --binary=true
+    oc new-build -n $APPS_NAMESPACE -e MAVEN_MIRROR_URL=$MAVEN_MIRROR_URL -i redhat-openjdk18-openshift:1.4 --labels='app=event-correlator,app-group=event-correlator' --name='event-correlator' --to='event-correlator:latest' --binary=true
     oc start-build event-correlator --from-file=../tmp/eventcorrelator/ -n $APPS_NAMESPACE --wait
 
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/eventcorrelator-templates.yaml \
@@ -541,7 +543,7 @@ function deployAccountProfile(){
     echo "Starting building image ... "
     echo
     mkdir -p ../tmp/accountprofile && cp -r ../sc/AccountProfile/* ../tmp/accountprofile/ && rm -f ../tmp/accountprofile/README.adoc && rm -rf ../tmp/accountprofile/target
-    oc new-build -n $APPS_NAMESPACE -e MAVEN_MIRROR_URL=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/maven-all-public/ -i redhat-openjdk18-openshift:1.4 --labels='app=accountprofile,app-group=accountprofile' --name='accountprofile' --to='accountprofile:latest' --binary=true
+    oc new-build -n $APPS_NAMESPACE -e MAVEN_MIRROR_URL=$MAVEN_MIRROR_URL -i redhat-openjdk18-openshift:1.4 --labels='app=accountprofile,app-group=accountprofile' --name='accountprofile' --to='accountprofile:latest' --binary=true
     oc start-build accountprofile --from-file=../tmp/accountprofile/ -n $APPS_NAMESPACE --wait
 
     # oc apply -n $APPS_NAMESPACE -f ../templates/accountprofile-buildconfig.yaml -p NPM_MIRROR=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/maven-all-public/
@@ -565,7 +567,7 @@ function deployCustomerCamelService(){
 
     # The OCP Deployment settings is in fabric8/deployment.xml
     oc project $APPS_NAMESPACE
-    mvn clean install fabric8:build -DMAVEN_MIRROR_URL=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/maven-all-public/
+    mvn clean install fabric8:build -DMAVEN_MIRROR_URL=$MAVEN_MIRROR_URL
 
     oc new-app -n $APPS_NAMESPACE -f ../../templates/customerservice-template.yaml
     
@@ -590,7 +592,7 @@ function deployCustomerUI(){
     echo
 
     mkdir -p ../tmp/customerui && cp -r ../sc/CustomerUI/* ../tmp/customerui/  && rm -f ../tmp/customerui/README.adoc && rm -rf ../tmp/customerui/node_modules
-    oc new-build -n $APPS_NAMESPACE -e NPM_MIRROR=http://nexus3-paygate-tools.apps.cluster-spore-7e54.spore-7e54.sandbox1254.opentlc.com/repository/npm-registry/ -i nodejs:latest --labels='app=customer-ui,app-group=customer-ui' --name='customer-ui' --to='customer-ui:latest' --binary=true
+    oc new-build -n $APPS_NAMESPACE -e NPM_MIRROR=$NPM_MIRROR -i nodejs:latest --labels='app=customer-ui,app-group=customer-ui' --name='customer-ui' --to='customer-ui:latest' --binary=true
     sed -i -e "s/http:\/\/localhost:8080\/auth/http:\/\/$SSO_APPNAME-$RHSSO_NAMESPACE.$APP_DOMAIN_NAME\/auth/" ../tmp/customerui/keycloak.json
     oc start-build customer-ui --from-file=../tmp/customerui/ -n $APPS_NAMESPACE --wait
 
