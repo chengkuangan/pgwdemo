@@ -150,6 +150,7 @@
 				<groupId>org.jboss.redhat-fuse</groupId>
 				<artifactId>fabric8-maven-plugin</artifactId>
 				<version>${fuse.version}</version>
+				<!--
 				<configuration>
 					<generator>
 						<config>
@@ -160,6 +161,7 @@
 						</config>
 					</generator>
 				</configuration>
+				-->
 				<!--configuration>
 					<enricher>
 						<config>
