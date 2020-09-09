@@ -60,13 +60,29 @@ objects:
         containers:
         - env:
           - name: MONGODB_USER
-            value: ${MONGODB_USER}
+            valueFrom:
+              secretKeyRef:
+               key: mongodb.user
+               name: ${APPLICATION_NAME}
+            #value: ${MONGODB_USER}
           - name: MONGODB_PASSWORD
-            value: ${MONGODB_PASSWORD}
+            valueFrom:
+              secretKeyRef:
+                key: mongodb.password
+                name: ${APPLICATION_NAME}
+            #value: ${MONGODB_PASSWORD}
           - name: MONGODB_ADMIN_PASSWORD
-            value: ${MONGODB_ADMIN_PASSWORD}
+            valueFrom:
+              secretKeyRef:
+                key: mongodb.admin.password
+                name: ${APPLICATION_NAME}
+            #value: ${MONGODB_ADMIN_PASSWORD}
           - name: MONGODB_DATABASE
-            value: ${MONGODB_DATABASE}
+            valueFrom:
+              configMapKeyRef:
+                key: mongodb.database
+                name: ${APPLICATION_NAME}
+            #value: ${MONGODB_DATABASE}
           image: rhscl/mongodb-32-rhel7
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -172,12 +188,12 @@ objects:
                 name: ${APPLICATION_NAME}
           - name: SPRING_DATA_MONGODB_USERNAME
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: mongodb.user
                 name: ${APPLICATION_NAME}
           - name: SPRING_DATA_MONGODB_PASSWORD
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: mongodb.password
                 name: ${APPLICATION_NAME}
           - name: SPRING_DATA_MONGODB_DATABASE
@@ -205,10 +221,23 @@ objects:
     name: ${APPLICATION_NAME}
   data:
     mongodb.database: ${MONGODB_DATABASE}
-    mongodb.password: ${MONGODB_PASSWORD}
+#    mongodb.password: ${MONGODB_PASSWORD}
     mongodb.server.host: ${APPLICATION_NAME}-mongodb
     mongodb.server.port: "27017"
+#    mongodb.user: ${MONGODB_USER}
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: accountservice
+    labels:
+      app: accountservice
+      app-group: accountservice
+      version: v1
+      template: accountservice
+  data:
+    mongodb.password: ${MONGODB_PASSWORD}
     mongodb.user: ${MONGODB_USER}
+    mongodb.admin.password: ${MONGODB_ADMIN_PASSWORD}
 #- apiVersion: v1
 #  kind: Route
 #  metadata:
@@ -264,17 +293,20 @@ parameters:
 - description: Database User
   displayName: Database User
   name: MONGODB_USER
-  value: accountservice
+  value: YWNjb3VudHNlcnZpY2U=
+  #value: accountservice
   required: true
 - description: Database Password
   displayName: Database Password
   name: MONGODB_PASSWORD
-  value: accountservice
+  value: YWNjb3VudHNlcnZpY2U=
+  #value: accountservice
   required: true
 - description: Database Admin Password
   displayName: Database Admin Password
   name: MONGODB_ADMIN_PASSWORD
-  value: accountservice
+  value: YWNjb3VudHNlcnZpY2U=
+  #value: accountservice
   required: true
 - description: Mongodb Version
   displayName: Mongodb Version
