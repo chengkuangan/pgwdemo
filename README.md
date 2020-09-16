@@ -230,6 +230,18 @@ The following shows the screen shots of the Grafana Dashboards after they are im
 
 ![Kafka Connect Grafana Dashboard](images/kafka_connect_grafana_dashboard.png)
 
+### Access to Grafana Dashboard Provided by Red Hat Service Meash Installation
+
+The default Red Hat Service Mesh comes with list of pre-configured Prometheus and Grafana assets. You can access to the Grafana Dashboards the Grafana installed in the `paygate-istio-system` OpenShift project.
+
+Once login into the Grafana website, go to Dashboard -> Manage. You will see a list of pre-configured dashboards.
+
+![Service Mesh Default Grafana Dashboards](images/sm_grafana_dashboard_list.png)
+
+![Default Istio Grafana Dashboard](images/istio_default_grafana_workload.png)
+
+The previous Kafka Grafana Dashboard can still be used to demonstrate how this can be done step by step.
+
 ### Accessing The Customer UI
 1. Browse to OpenShift admin console. Goto the `paygate-istio-system` project and click on the customer-ui route to access the demo UI.<br><br>
 ![Customer UI](images/customer-ui_route.png)
