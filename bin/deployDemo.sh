@@ -59,6 +59,13 @@ function init(){
     echo
     printHeader "--> Creating temporary directory ../tmp"
     mkdir ../tmp
+
+    printHeader "--> Create OpenShift required projects if not already created"
+
+    oc new-project $APPS_NAMESPACE
+    oc new-project $ISTIO_SYSTEM_NAMESPACE
+    oc new-project $RHSSO_NAMESPACE
+
 }
 
 function printTitle(){
@@ -234,15 +241,15 @@ function preRequisitionCheck(){
         removeTempDirs
         exit 0
     fi
-
-    oc get sub -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep prometheus
-    if [ $? -ne 0 ]; then
-        echo
-        printWarning "Please install Promethues Operator in namespace $APPS_NAMESPACE"
-        echo
-        removeTempDirs
-        exit 0
-    fi
+    # -- Not required anymore ---
+    # --- >>> oc get sub -o custom-columns=NAME:.metadata.name -n $APPS_NAMESPACE | grep prometheus
+    # --- >>> if [ $? -ne 0 ]; then
+    # --- >>>     echo
+    # --- >>>     printWarning "Please install Promethues Operator in namespace $APPS_NAMESPACE"
+    # --- >>>     echo
+    # --- >>>     removeTempDirs
+    # --- >>>     exit 0
+    # --- >>> fi
 }
 
 function deployKafka(){
@@ -882,8 +889,10 @@ function deployNConfigurePrometheus(){
     oc expose service grafana  -n $APPS_NAMESPACE
 
     # --- updating the Grafana Dashboard json with the correct ocp project name.
-    cp ../templates/grafana/grafanadashboard_common_payment_gateway_overview.json ../templates/grafana/grafanadashboard_payment_gateway_overview.json
-    sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/grafanadashboard_payment_gateway_overview.json
+    # --- using a different template for Service Mesh Grafana
+    ## cp ../templates/grafana/grafanadashboard_common_payment_gateway_overview.json ../templates/grafana/grafanadashboard_payment_gateway_overview.json
+    cp ../templates/grafana/grafanadashboard_payment_gateway_overview_sm.json ../templates/grafana/grafanadashboard_payment_gateway_overview_sm.json
+    sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/grafanadashboard_payment_gateway_overview_sm.json
 
     echo
     printHeader "Please refer to the following for guide on enabling the Grafana dashboard for Kafka ... "
@@ -904,8 +913,8 @@ function installServiceMesh(){
     oc create -n $ISTIO_SYSTEM_NAMESPACE -f ../tmp/istio/istio-installation.yaml
     # Updating namespace member templates.
     cp ../templates/istio/servicemeshmemberroll.yaml ../tmp/istio/servicemeshmemberroll.yaml
-    sed -i -e "s/namespace:.*/namespace: $ISTIO_SYSTEM_NAMESPACE/" ../tmp/istio/servicemeshmemberroll.yaml
     sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/istio/servicemeshmemberroll.yaml
+    sed -i -e "s/namespace:.*/namespace: $ISTIO_SYSTEM_NAMESPACE/" ../tmp/istio/servicemeshmemberroll.yaml
     # Create the istio members
     oc create -n $ISTIO_SYSTEM_NAMESPACE -f ../tmp/istio/servicemeshmemberroll.yaml
 
@@ -926,7 +935,8 @@ function configureServiceMeshNetwork(){
     oc apply -f ../tmp/istio/customer-ui-istio-network-config.yaml -n $APPS_NAMESPACE
 
     # Patch istio-mesh network policy to allow network for PODs without label pgw-istio='true'
-    oc patch networkpolicy istio-mesh -p '{"spec":{ "podSelector": {"matchLabels": { "pgw-istio": "true"}}}}' -n $APPS_NAMESPACE
+    # ---- not required anymore
+    # oc patch networkpolicy istio-mesh -p '{"spec":{ "podSelector": {"matchLabels": { "pgw-istio": "true"}}}}' -n $APPS_NAMESPACE
 }
 
 # Implicitly restarting all deployment.
@@ -946,6 +956,7 @@ function restartDeployment(){
         oc rollout restart deployment/customer-ui -n $APPS_NAMESPACE
         oc rollout restart deployment/customerservice -n $APPS_NAMESPACE
         oc rollout restart deployment/mongodb-connect-cluster-connect -n $APPS_NAMESPACE
+        oc rollout restart deployment/event-correlator -n $APPS_NAMESPACE
         exit 0
     fi
 }
@@ -984,7 +995,7 @@ function printHelp(){
     echo "      - Jaeger"
     echo "      - Kiali"
     echo "      - ElasticSearch"
-    echo "      - Prometheus"
+    #echo "      - Prometheus"
     echo
     printHeader "Refer to the following website for the complete and updated guide ..."
     echo
@@ -1029,7 +1040,7 @@ function printResult(){
     echo "   This is because the applications deployed before ServiceMesh is ready. Please run the following command "
     echo "   to redeploy the applications."
     echo 
-    printCommand "      ./deploy.sh -rd"
+    printCommand "      ./deployDemo.sh -rd"
     echo
     echo -e " * The installed RHSSO is ${RED}ephemeral${NC}. The configurations will be lost if the POD restarted or the OpenShift server restarted. "
     echo "   If this happens, please delete the RHSSO project and run the following command to recreate the RHSSO:"
@@ -1137,7 +1148,7 @@ fi
 #echo
 
 showConfirmToProceed
-deployNConfigurePrometheus
+# Not required ----- deployNConfigurePrometheus
 installServiceMesh
 installBaseDemo
 configureServiceMeshNetwork

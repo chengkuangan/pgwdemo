@@ -50,7 +50,7 @@ objects:
         labels:
           app: ${APPLICATION_NAME}
           version: ${APP_VERSION}
-          pgw-istio: 'true'
+          #pgw-istio: 'true'
         annotations:
             sidecar.istio.io/inject: "true"
       spec:

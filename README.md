@@ -15,12 +15,12 @@ Note: The lowest in the list is the latest change.
 * Added Promethues and Grafana monitoring.
 * Simplified installation steps.
 * Enable Red Hat ServiceMesh, an Istio based solution.
+* Changed to use the Grafana included with Red Hat Service Mesh installation. With this move, RH AMQ Streams default Grafana dashboards are not being used due to some Kafka metrics are not exposed by default with the Service Mesh Prometheus. This will take some time to fix it and decided to not using the default AMQ Streams Grafana dashboards at the moment. You can still demo the dashbaords provided by Red Hat Service Mesh and the custom dashboard that I  had created earlier.
 
 ### Product Vesions
 These are product version when this demo is developed. However it should work on other versions provided the products required are supported / can be technically deployed on the OpenShift version.
 
 * OpenShift Container Platform 4.*
-* Prometheus Operator Community 0.32.0
 * Red Hat AMQ Streams Operator 1.4.1
 * Red Hat ServiceMesh Operator 1.0.2
 * Kiali Operator 1.0.7 by Red Hat
@@ -154,26 +154,20 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 * You need to have oc command line tool installed on your local PC.
 * You need to logon to OpenShift with **cluster-admin** role user before running the installation secipt. Typical use case you will not need to use cluster-admin role for apps and container deployment. But it is required because we automate lots of steps in the installer thats some of the steps require cluster-admin access to execute.
 * You need to have openssl and keytool installed on your PC. The installer uses openssl and keytool to automate certs and keys creations.
-* Pre-created the necessary OCP projects for the following:
-  * RHSSO
-  * The applications
-  * The Red Hat ServiceMesh Control Plane
+* The following projects are created by the installer script:
+  * RHSSO (paygate-rhsso)
+  * The applications (paygate)
+  * The Red Hat ServiceMesh Control Plane (paygate-istio-system)
 * PVs are required. Impossible for me to list them all here now. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
 
 ### Installation Steps
 
 1. Clone this repo into your local PC.
 
-2. Create the required OCP projects to deploy this demo:
-
-  * Project for RHSSO. Example: `paygate-rhsso`
-  * Project for the demo applications and containers. Example: `paygate`
-  * Project for Red Hat ServiceMesh core system. Example: `paygate-istio-system`  
-
-3. With cluster-admin role, deploy the operators listed in the **Pre-Requisitions Section**.
+2. With cluster-admin role, deploy the operators listed in the **Pre-Requisitions Section**.
 <br><br>Please refer to [Deploying Promethues and Grafana on OpenShift](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for more detail.
 
-4. Finally, change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory. Follow through the installation prompts.
+3. Finally, change to `bin` directory and execute the `deployDemo.sh`. Make sure you login to OpenShift with the correct user. Please note that this .sh script must be ran from within the `bin` directory. Follow through the installation prompts.
 ```
 cd bin 
 ./deployDemo.sh -i
@@ -193,19 +187,19 @@ cd bin
 
 ## Post Installation Configurations
 
-### Enable Grafana for Kafka
+### Import Grafana Dashboard
 
-1. Once the Grafana is deployed and running, proceed to login with the initial default username and password (`admin/admin`).
+1. Once the Grafana is deployed and running, proceed to login the Grafana.
 
-2. Create the data source for Prometheus.
+2. Create the data source for Prometheus if not already present.
 
 3. Import the sample dashboard from the following file in the cloned project on your local PC.
 ```
-templates/grafana/grafanadashboard_payment_gateway_overview.json
+templates/grafana/grafanadashboard_payment_gateway_overview_sm.json
 ```
 
 ![Payment Gateway Grafana Dashboard](images/payment_gateway_grafana_dashboard.png)
-
+<!--
 4. There are pre-defined AMQ Streams dashboard examples which you can import into the Grafana. These sample JSON files are located in `templates/kafka/metrics/grafana-dashboards`
 <br>
 
@@ -213,22 +207,25 @@ templates/grafana/grafanadashboard_payment_gateway_overview.json
   * strimzi-kafka-connect.json
   * strimzi-zookeeper.json
 <br>
-
+-->
 Refer [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for detail.
 <br>
 
 Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#assembly-metrics-grafana-str) for more details.
 <br><br>
+<!--
 The following shows the screen shots of the Grafana Dashboards after they are imported.
-<br>
-
+<br -->
+<!--
 ![Zookeeper Grafana Dashboard](images/zookeeper_grafana_dashboard.png)
-<br>
-
+<br -->
+<!--
 ![Kafka Grafana Dashboard](images/kafka_grafana_dashboard.png)
-<br>
+<br-->
 
+<!--
 ![Kafka Connect Grafana Dashboard](images/kafka_connect_grafana_dashboard.png)
+-->
 
 ### Access to Grafana Dashboard Provided by Red Hat Service Meash Installation
 

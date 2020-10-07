@@ -65,8 +65,7 @@
                         "name": "${NAME}",
                         "labels": {
                             "app": "${NAME}",
-                            "version": "${APP_VERSION}",
-                            "pgw-istio": "true"
+                            "version": "${APP_VERSION}"
                         },
                         "annotations":{
                             "sidecar.istio.io/inject": "true"
