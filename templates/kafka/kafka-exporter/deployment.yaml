@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paygate-kafka-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: paygate-kafka-exporter
+      app.kubernetes.io/instance: 0.6.0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: paygate-kafka-exporter
+        app.kubernetes.io/instance: 0.6.0
+        app: paygate-kafka-exporter
+    spec:
+      containers:
+      - name: paygate-kafka-exporter
+        image: danielqsj/kafka-exporter:latest
+        imagePullPolicy: IfNotPresent
+        args:
+          - "--kafka.server=kafka-cluster-kafka-bootstrap.paygate.svc:9092"
+          - "--kafka.version=2.4.0"
+          - "--no-sasl.enabled"
+          - "--no-sasl.handshake"
+          - "--no-tls.enabled"
+          - "--topic.filter=.*"
+          - "--group.filter=.*"
+          - "--web.listen-address=:9308"
+          - "--web.telemetry-path=/metrics"
+          - "--log.level=debug"  
+        ports:
+          - name: metrics
+            containerPort: 9308
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 100m
+            memory: 250Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paygate-kafka-exporter
+  labels:
+    app: paygate-kafka-exporter
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: '9308'
+    prometheus.io/scrape: 'true'
+spec:
+  type: ClusterIP
+  ports:
+  - name: prometheus
+    port: 9308
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: paygate-kafka-exporter
+    app.kubernetes.io/instance: 0.6.0

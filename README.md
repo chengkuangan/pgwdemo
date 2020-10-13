@@ -15,7 +15,7 @@ Note: The lowest in the list is the latest change.
 * Added Promethues and Grafana monitoring.
 * Simplified installation steps.
 * Enable Red Hat ServiceMesh, an Istio based solution.
-* Changed to use the Grafana included with Red Hat Service Mesh installation. With this move, RH AMQ Streams default Grafana dashboards are not being used due to some Kafka metrics are not exposed by default with the Service Mesh Prometheus. This will take some time to fix it and decided to not using the default AMQ Streams Grafana dashboards at the moment. You can still demo the dashbaords provided by Red Hat Service Mesh and the custom dashboard that I  had created earlier.
+* Changed to use the Prometheus and Grafana included with Red Hat Service Mesh (SM) installation. Created and consolidated the Kafka Grafana dashboards into one single dashboard for demo purpose. Some dashboard charts/components are removed because some metrics are not available from Kafka due to the operator installed SM Prometheus configurations cannot be changed out of the box.
 
 ### Product Vesions
 These are product version when this demo is developed. However it should work on other versions provided the products required are supported / can be technically deployed on the OpenShift version.
@@ -143,12 +143,11 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
 * You will need to have jq command line install on your PC. Please proceed to download and install from https://stedolan.github.io/jq/. Make sure the executable is configured at PATH variable and accessible from command line.
 * You should have the following Operators installed:
   * Red Hat AMQ Streams Operator
-  * Prometheus Operator Community Version
   * Red Hat AMQ Streams Operator
   * Red Hat ServiceMesh Operator
   * Kiali Operator by Red Hat
   * Jaeger Operator by Red Hat
-  * ElasticeSearch Operator 4.2.4-201911050122 by Red Hat
+  * ElasticeSearch Operator by Red Hat
   
   For simplicity, install the operators for all namespaces if possible.
 * You need to have oc command line tool installed on your local PC.
@@ -189,13 +188,14 @@ cd bin
 
 ### Import Grafana Dashboard
 
-1. Once the Grafana is deployed and running, proceed to login the Grafana.
+1. Once the Service Mesh Grafana is deployed and running, proceed to login the Grafana using the existing OpenShift user.
 
-2. Create the data source for Prometheus if not already present.
+2. Create the data source for Prometheus if not already present. (Should be pre-created by SM installation)
 
 3. Import the sample dashboard from the following file in the cloned project on your local PC.
 ```
-templates/grafana/grafanadashboard_payment_gateway_overview_sm.json
+templates/grafana/payment-gateway-overview-sm.json
+templates/grafana/strimzi-all-in-one-sm.json
 ```
 
 ![Payment Gateway Grafana Dashboard](images/payment_gateway_grafana_dashboard.png)
@@ -211,9 +211,10 @@ templates/grafana/grafanadashboard_payment_gateway_overview_sm.json
 Refer [How Can I Monitor Container Application Resources on OpenShift?](https://braindose.blog/2020/06/15/how-monitor-container-application-resources-openshift/) for detail.
 <br>
 
+<!--
 Refers [Red Hat AMQ Streams Metrics](https://access.redhat.com/documentation/en-us/red_hat_amq/7.6/html-single/using_amq_streams_on_openshift/index#assembly-metrics-grafana-str) for more details.
 <br><br>
-<!--
+
 The following shows the screen shots of the Grafana Dashboards after they are imported.
 <br -->
 <!--

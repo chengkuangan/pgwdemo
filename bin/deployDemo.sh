@@ -11,6 +11,7 @@
 APPS_NAMESPACE="paygate"
 ISTIO_SYSTEM_NAMESPACE="paygate-istio-system"
 KAFKA_CLUSTER_NAME="kafka-cluster"
+THREESCALE_NAMESPACE="paygate-3scale"
 APPS_PROJECT_DISPLAYNAME="Payment Gateway"
 APP_DOMAIN_NAME="apps.ocpcluster1.gemsdemolab.com"
 RHSSO_NAMESPACE="paygate-rhsso"
@@ -107,8 +108,8 @@ function printVariables(){
     echo "SSO_APPNAME = $SSO_APPNAME"
     echo "APP_DOMAIN_NAME = $APP_DOMAIN_NAME"
     echo "OC_USER = $OC_USER"
-    echo "STRIMZI_SLACKAPI_URL = $STRIMZI_SLACKAPI_URL"
-    echo "STRIMZI_SLACK_CHANNEL = $STRIMZI_SLACK_CHANNEL"
+    #echo "STRIMZI_SLACKAPI_URL = $STRIMZI_SLACKAPI_URL"
+    #echo "STRIMZI_SLACK_CHANNEL = $STRIMZI_SLACK_CHANNEL"
     echo
 
 }
@@ -488,7 +489,7 @@ function deployAccountService(){
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountservice-templates.yaml -p APP_NAMESPACE=$APPS_NAMESPACE
     # TODO enable prometheus for mongodb
     # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
-    oc annotate --overwrite svc accountservice prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
+    #oc annotate --overwrite svc accountservice prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
 
 }
 
@@ -510,7 +511,7 @@ function deployCreditService(){
     -p KAFKA_BOOTSTRAP_SERVER=$KAFKA_CLUSTER_NAME-kafka-bootstrap:9092 \
     -p APP_NAMESPACE=$APPS_NAMESPACE
     # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
-    oc annotate --overwrite svc creditservice prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
+    #oc annotate --overwrite svc creditservice prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
 
 }
 
@@ -557,7 +558,7 @@ function deployAccountProfile(){
     oc new-app -n $APPS_NAMESPACE --allow-missing-imagestream-tags=true -f ../templates/accountprofile-templates.yaml -p APP_NAMESPACE=$APPS_NAMESPACE
     # TODO enable prometheus for mongodb
     # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
-    oc annotate --overwrite svc accountprofile prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
+    #oc annotate --overwrite svc accountprofile prometheus.io/scrape='true' prometheus.io/port='8080' prometheus.io/path=/actuator/prometheus -n $APPS_NAMESPACE
 
 }
 
@@ -578,7 +579,7 @@ function deployCustomerCamelService(){
 
     oc new-app -n $APPS_NAMESPACE -f ../../templates/customerservice-template.yaml
     
-    oc annotate --overwrite svc customerservice prometheus.io/scrape='true' prometheus.io/port='9779'
+    #oc annotate --overwrite svc customerservice prometheus.io/scrape='true' prometheus.io/port='9779'
 
     #mvn clean install fabric8:deploy -Dfabric8.deploy.createExternalUrls=true fabric8:log 
     #mvn clean install fabric8:deploy -Dfabric8.openshift.generateRoute=false -Dopenshift.namespace=$APPS_NAMESPACE
@@ -610,7 +611,7 @@ function deployCustomerUI(){
     #-p CREDIT_API_URL=http://creditservice-chgan-payment-gateway.apps.ocpcluster1.gemsdemolab.com/ws/pg/credits \
     
     # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
-    oc annotate --overwrite svc customer-ui prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
+    #oc annotate --overwrite svc customer-ui prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
     
 }
 
@@ -740,40 +741,41 @@ function readInput(){
             fi
         fi
 
-        if [ "$REINSTALL_RHSSO" != "yes" ] && [ "$RESTART_DEPLOYMENT" != "yes" ]; then
-            printf "Kafka Cluster Name [$KAFKA_CLUSTER_NAME]:"
-            read INPUT_VALUE
-            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-                KAFKA_CLUSTER_NAME=$INPUT_VALUE
-            fi
+        #if [ "$REINSTALL_RHSSO" != "yes" ] && [ "$RESTART_DEPLOYMENT" != "yes" ]; then
+            # --- remove the option to enter kafka cluster name. This should be hardcoded.
+            #printf "Kafka Cluster Name [$KAFKA_CLUSTER_NAME]:"
+            #read INPUT_VALUE
+            #if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+            #    KAFKA_CLUSTER_NAME=$INPUT_VALUE
+            #fi
 
-            if [ "$INPUT_VALUE" = "q" ]; then
-                removeTempDirs
-                exit 0
-            fi
+            #if [ "$INPUT_VALUE" = "q" ]; then
+            #    removeTempDirs
+            #    exit 0
+            #fi
             
-            printf "Slack API URL [$STRIMZI_SLACKAPI_URL]:"
-            read INPUT_VALUE
-            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-                STRIMZI_SLACKAPI_URL=$INPUT_VALUE
-            fi
+            #printf "Slack API URL [$STRIMZI_SLACKAPI_URL]:"
+            #read INPUT_VALUE
+            #if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+            #    STRIMZI_SLACKAPI_URL=$INPUT_VALUE
+            #fi
 
-            if [ "$INPUT_VALUE" = "q" ]; then
-                removeTempDirs
-                exit 0
-            fi
+            #if [ "$INPUT_VALUE" = "q" ]; then
+            #    removeTempDirs
+            #    exit 0
+            #fi
 
-            printf "Slack Channel [$STRIMZI_SLACK_CHANNEL]:"
-            read INPUT_VALUE
-            if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
-                STRIMZI_SLACK_CHANNEL=$INPUT_VALUE
-            fi
+            #printf "Slack Channel [$STRIMZI_SLACK_CHANNEL]:"
+            #read INPUT_VALUE
+            #if [ "$INPUT_VALUE" != "" ] && [ "$INPUT_VALUE" != "q" ]; then
+            #    STRIMZI_SLACK_CHANNEL=$INPUT_VALUE
+            #fi
             
-            if [ "$INPUT_VALUE" = "q" ]; then
-                removeTempDirs
-                exit 0
-            fi
-        fi
+            #if [ "$INPUT_VALUE" = "q" ]; then
+            #    removeTempDirs
+            #    exit 0
+            #fi
+        #fi
 
         INPUT_VALUE="q"
     done
@@ -1047,6 +1049,9 @@ function printResult(){
     echo 
     printCommand "      ./deployDemo.sh -sso"
     echo
+    echo -e " * Please logon to Service Mesh Grafana admin console and import the samples dashboards as per the following:"
+    echo "    ../templates/grafana/strimzi-all-in-one-sm.json"
+    echo "    ../templates/grafana/payment-gateway-overview-sm.json"
     echo "=============================================================================================================="
     echo
 }
@@ -1083,14 +1088,13 @@ function processArguments(){
 
 # ------
 # Install only the basic demo
-# The basic demo is without the following:
-#    - Prometheus
 # ------
 function installBaseDemo(){
     #createNamespaces
     deployKafka
     deployCRMDB
     deployKafkaConnect
+    deployKafkaExporter
     deployAccountService
     deployCreditService
     deployEventCorrelator
@@ -1102,6 +1106,31 @@ function installBaseDemo(){
     importSampleData
     deployRHSSO
     #deployFuseConsole     # --- Disabled Fuse Console, not working in Istio environment
+}
+
+function deployKafkaExporter(){
+    echo 
+    printHeader "--> Deploy Kafka Prometheus Exporter ... "
+    echo
+    mkdir -p ../tmp/kafka/kafka-exporter
+    cp ../templates/kafka/kafka-exporter/deployment.yaml ../tmp/kafka/kafka-exporter/deployment.yaml
+    sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/kafka-exporter/deployment.yaml
+    sed -i -e "s/kafka-cluster-kafka-bootstrap/$KAFKA_CLUSTER_NAME-kafka-bootstrap/" ../tmp/kafka/kafka-exporter/deployment.yaml
+    oc create -f ../tmp/kafka/kafka-exporter/deployment.yaml
+}
+
+function updateTemplates(){
+    echo 
+    printHeader "--> Updating Grafana Dashboard templates ... "
+    echo
+    # --- updating the Grafana Dashboard json with the correct ocp project name.
+    # --- using a different template for Service Mesh Grafana
+    ## cp ../templates/grafana/grafanadashboard_common_payment_gateway_overview.json ../templates/grafana/grafanadashboard_payment_gateway_overview.json
+    cp -f ../templates/grafana/payment-gateway-overview-sm-temp.json ../templates/grafana/payment-gateway-overview-sm.json
+    sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/payment-gateway-overview-sm.json
+    cp -f ../templates/grafana/strimzi-all-in-one-sm-temp.json ../templates/grafana/strimzi-all-in-one-sm.json
+    sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/strimzi-all-in-one-sm.json
+
 }
 
 function showConfirmToProceed(){
@@ -1122,6 +1151,38 @@ function reinstallRHSSO(){
         removeTempDirs
         exit 0
     fi
+}
+
+function install3Scale(){
+    
+    echo
+    printHeader "--> Installing 3Scale ... "
+    echo
+    echo
+    printHeader "Creating 3Scale namespace ... "
+    echo
+    oc new-project $THREESCALE_NAMESPACE
+    echo
+    printHeader "Creating 3Scale CRD ... "
+    echo
+    for i in `ls ../templates/3scale/crds/*_crd.yaml`; do oc create -f $i -n $THREESCALE_NAMESPACE; done
+    echo
+    printHeader "Creating 3Scale service account ... "
+    echo
+    oc create -f ../templates/3scale/service_account.yaml -n $THREESCALE_NAMESPACE
+    echo
+    printHeader "Creating 3Scale role ... "
+    echo
+    oc create -f ../templates/3scale/role.yaml -n $THREESCALE_NAMESPACE
+    echo
+    printHeader "Creating 3Scale role binding ... "
+    echo
+    oc create -f ../templates/3scale/role_binding.yaml -n $THREESCALE_NAMESPACE
+    echo
+    printHeader "Deploying 3Scale Operator ... "
+    echo
+    oc create -f ../templates/3scale/operator.yaml -n $THREESCALE_NAMESPACE
+
 }
 
 processArguments $@
@@ -1152,5 +1213,6 @@ showConfirmToProceed
 installServiceMesh
 installBaseDemo
 configureServiceMeshNetwork
+#install3Scale
 removeTempDirs
 printResult

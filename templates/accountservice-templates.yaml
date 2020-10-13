@@ -145,6 +145,12 @@ objects:
   kind: Service
   metadata:
     name: ${APPLICATION_NAME}
+    labels:
+      app: ${APPLICATION_NAME}
+    annotations:
+      prometheus.io/path: "/actuator/prometheus"
+      prometheus.io/port: "8080"
+      prometheus.io/scrape: "true"
   spec:
     ports:
     - port: 8080

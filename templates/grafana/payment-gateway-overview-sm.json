@@ -15,8 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 7,
-  "iteration": 1592124991007,
+  "id": 11,
+  "iteration": 1601542265187,
   "links": [],
   "panels": [
     {
@@ -169,7 +169,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(kafka_server_replicamanager_leadercount{namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\"})",
+          "expr": "count(kafka_server_replicamanager_leadercount{kubernetes_namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -207,6 +207,7 @@
         "#8F3BB8",
         "#d44a3a"
       ],
+      "datasource": null,
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -259,7 +260,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kafka_server_replicamanager_partitioncount{namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\"})",
+          "expr": "sum(kafka_server_replicamanager_partitioncount{kubernetes_namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -345,7 +346,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kafka_connect_connect_worker_metrics_connector_count{strimzi_io_kind=~\"KafkaConnect.*\", namespace=\"$namespace\"})",
+          "expr": "sum(kafka_connect_connect_worker_metrics_connector_count{strimzi_io_kind=~\"KafkaConnect.*\", kubernetes_namespace=\"$namespace\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -431,7 +432,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(zookeeper_quorumsize{namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\",strimzi_io_kind=\"Kafka\"})",
+          "expr": "max(zookeeper_quorumsize{kubernetes_namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\",strimzi_io_kind=\"Kafka\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -516,7 +517,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(org_apache_camel_ExchangesTotal{namespace=\"$namespace\"})",
+          "expr": "sum(org_apache_camel_ExchangesTotal{kubernetes_namespace=\"$namespace\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -601,7 +602,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(org_apache_camel_ExchangesCompleted{namespace=\"$namespace\"})",
+          "expr": "sum(org_apache_camel_ExchangesCompleted{kubernetes_namespace=\"$namespace\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -687,7 +688,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(org_apache_camel_ExchangesFailed{namespace=\"$namespace\"})",
+          "expr": "sum(org_apache_camel_ExchangesFailed{kubernetes_namespace=\"$namespace\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -772,7 +773,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(zookeeper_inmemorydatatree_nodecount{namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\",strimzi_io_kind=\"Kafka\"})",
+          "expr": "avg(zookeeper_inmemorydatatree_nodecount{kubernetes_namespace=\"$namespace\",strimzi_io_cluster=\"$kafka_cluster\",strimzi_io_kind=\"Kafka\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -802,6 +803,7 @@
       "datasource": "Prometheus",
       "description": "CPU usage for all services under Payment Gateway",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -824,7 +826,9 @@
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
-      "options": {},
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -835,7 +839,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "# NodeJs and Kafka\nlabel_join(rate({__name__=~\".*process_cpu_seconds_total\", namespace=\"$namespace\"}[1m]), \"__name__\", \"\", \"app\", \"strimzi_io_name\")",
+          "expr": "# NodeJs and Kafka\nlabel_join(rate({__name__=~\".*process_cpu_seconds_total\", kubernetes_namespace=\"$namespace\"}[1m]), \"__name__\", \"\", \"app\", \"strimzi_io_name\")",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -898,8 +902,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": null,
       "description": "JVM or Heap Memory Usage",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -920,7 +926,9 @@
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
-      "options": {},
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -931,15 +939,15 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(jvm_memory_bytes_used{namespace=\"$namespace\"}) by (kubernetes_pod_name)",
+          "expr": "sum(jvm_memory_bytes_used{kubernetes_namespace=\"$namespace\"}) by (kubernetes_name)",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
-          "legendFormat": "{{kubernetes_pod_name}}",
+          "legendFormat": "{{kubernetes_name}}",
           "refId": "A"
         },
         {
-          "expr": "{__name__=~\".*:nodejs_heap_size_used_bytes\", namespace=\"$namespace\"}",
+          "expr": "{__name__=~\".*:nodejs_heap_size_used_bytes\", kubernetes_namespace=\"$namespace\"}",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -948,7 +956,7 @@
           "refId": "B"
         },
         {
-          "expr": "sum(jvm_memory_used_bytes{namespace=\"$namespace\"}) by (app)",
+          "expr": "sum(jvm_memory_used_bytes{kubernetes_namespace=\"$namespace\"}) by (app)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1005,6 +1013,7 @@
       "datasource": "Prometheus",
       "description": "SpringBoot applications average response time for business requests",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -1026,7 +1035,9 @@
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
-      "options": {},
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -1037,7 +1048,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "http_server_requests_seconds_sum{uri=~\"/ws/pg/.*\", namespace=\"$namespace\"} / http_server_requests_seconds_count {uri=~\"/ws/pg/.*\", namespace=\"$namespace\"}",
+          "expr": "http_server_requests_seconds_sum{uri=~\"/ws/pg/.*\", kubernetes_namespace=\"$namespace\"} / http_server_requests_seconds_count {uri=~\"/ws/pg/.*\", kubernetes_namespace=\"$namespace\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1094,6 +1105,7 @@
       "datasource": "Prometheus",
       "description": "NodeJs applications average response time.",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -1114,7 +1126,9 @@
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
-      "options": {},
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -1125,7 +1139,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "{__name__=~\".*_duration_sum\", namespace=\"$namespace\"} / {__name__=~\".*_duration_count\", namespace=\"$namespace\"}",
+          "expr": "{__name__=~\".*_duration_sum\", kubernetes_namespace=\"$namespace\"} / {__name__=~\".*_duration_count\", kubernetes_namespace=\"$namespace\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1176,7 +1190,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 18,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [
     "payment-gateway"
@@ -1185,8 +1199,8 @@
     "list": [
       {
         "current": {
-          "text": "paygate",
-          "value": "paygate"
+          "text": "myproject",
+          "value": "myproject"
         },
         "hide": 2,
         "label": "Namespace",
@@ -1194,11 +1208,11 @@
         "options": [
           {
             "selected": true,
-            "text": "paygate",
-            "value": "paygate"
+            "text": "myproject",
+            "value": "myproject"
           }
         ],
-        "query": "paygate",
+        "query": "myproject",
         "skipUrlSync": false,
         "type": "constant"
       },
@@ -1255,5 +1269,5 @@
   "timezone": "",
   "title": "Payment Gateway Overview",
   "uid": "WRmZg1mGk",
-  "version": 9
+  "version": 7
 }
