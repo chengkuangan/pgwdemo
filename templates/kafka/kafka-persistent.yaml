@@ -19,7 +19,7 @@ spec:
       volumes:
       - id: 0
         type: persistent-claim
-        size: 10Gi
+        size: 100Gi
         deleteClaim: false
     metrics:
       # Inspired by config from Kafka 2.0.0 example rules:
@@ -122,7 +122,7 @@ spec:
     replicas: 3
     storage:
       type: persistent-claim
-      size: 10Gi
+      size: 50Gi
       deleteClaim: false
     metrics:
       # Inspired by Zookeeper rules

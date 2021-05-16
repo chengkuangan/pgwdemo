@@ -122,18 +122,19 @@ function preRequisitionCheck(){
     echo
     
     ## --- Check if the Kafka yaml files are in the kafka-resource folder
-    if [ ! -d "../kafka-resources/install/cluster-operator" ]; then
-        echo
-        printWarning "Missing AMQ Streams OCP Install YMAL files..."
-        echo
-        echo "Please download AMQ Streams OCP Install YAML files from Red Hat website and place them into the kafka-resources directory."
-        echo "The directory structure should looks something like this..."
-        echo "kafka-resources/install"
-        echo "kafka-resources/examples"
-        echo
-        removeTempDirs
-        exit 0
-    fi 
+    ## Not required anymore
+    # if [ ! -d "../kafka-resources/install/cluster-operator" ]; then
+    #     echo
+    #     printWarning "Missing AMQ Streams OCP Install YMAL files..."
+    #     echo
+    #     echo "Please download AMQ Streams OCP Install YAML files from Red Hat website and place them into the kafka-resources directory."
+    #     echo "The directory structure should looks something like this..."
+    #     echo "kafka-resources/install"
+    #     echo "kafka-resources/examples"
+    #     echo
+    #     removeTempDirs
+    #     exit 0
+    # fi 
 
     # checking whether jq command tool is installed.
     hash jq
