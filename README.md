@@ -159,6 +159,10 @@ Please refer to this article for detail of [How to Create A MongoDB Kafka Connec
   * The applications (paygate)
   * The Red Hat ServiceMesh Control Plane (paygate-istio-system)
 * PVs are required. Impossible for me to list them all here now. The best is to enable [dynamic storage provisioning](https://docs.openshift.com/container-platform/4.4/storage/dynamic-provisioning.html) in OpenShift.
+* If you are using rhpds to deploy the demo, you need to increase the default project resource limit. The current enforced default project resource limit by rhpds will cause the demo failed to be deployed. You can modify the default project resource limit with the following command:
+```
+oc edit template project-request -n openshift-config
+```
 
 ### Installation Steps
 
