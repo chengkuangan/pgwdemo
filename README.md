@@ -16,6 +16,7 @@ Note: The lowest in the list is the latest change.
 * Simplified installation steps.
 * Enable Red Hat ServiceMesh, an Istio based solution.
 * Changed to use the Prometheus and Grafana included with Red Hat Service Mesh (SM) installation. Created and consolidated the Kafka Grafana dashboards into one single dashboard for demo purpose. Some dashboard charts/components are removed because some metrics are not available from Kafka due to the operator installed SM Prometheus configurations cannot be changed out of the box, or at least I have not figured out a way to do so :-)
+* Added UI services to view real-time messages in Kafka topics. Please refers to [Kafka Topic Viewer](/sc/KafkaTopicViewer/)
 
 ### Product Vesions
 These are product version when this demo is developed. However it should work on other versions provided the products required are supported / can be technically deployed on the OpenShift version.

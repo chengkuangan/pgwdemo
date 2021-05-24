@@ -4,6 +4,7 @@ target
 .project
 .classpath
 .vscode
+.srl
 Documentation
 dd
 bin/deployArgoCD.sh

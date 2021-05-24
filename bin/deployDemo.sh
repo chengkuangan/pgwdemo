@@ -44,8 +44,6 @@ BLUE='\033[1;34m'
 PURPLE='\033[1;35m'
 YELLOW='\033[1;33m'
 
-# TODO Move all dashboards to ServiceMesh's Grafana
-# TODO Remove fuse console, it seems not supporting istio
 function init(){
     
     set echo off
@@ -121,21 +119,6 @@ function preRequisitionCheck(){
     printHeader "--> Checking on pre-requisitions ..."
     echo
     
-    ## --- Check if the Kafka yaml files are in the kafka-resource folder
-    ## Not required anymore
-    # if [ ! -d "../kafka-resources/install/cluster-operator" ]; then
-    #     echo
-    #     printWarning "Missing AMQ Streams OCP Install YMAL files..."
-    #     echo
-    #     echo "Please download AMQ Streams OCP Install YAML files from Red Hat website and place them into the kafka-resources directory."
-    #     echo "The directory structure should looks something like this..."
-    #     echo "kafka-resources/install"
-    #     echo "kafka-resources/examples"
-    #     echo
-    #     removeTempDirs
-    #     exit 0
-    # fi 
-
     # checking whether jq command tool is installed.
     hash jq
     
@@ -924,6 +907,66 @@ function installServiceMesh(){
 
 }
 
+# --- Deploying Kafka Topic Viewer ...
+# --- Web Apps to view real-time messages in Kafka Topics.
+function deployKafkaTopicViewer(){
+    echo 
+    printHeader "--> Deploying Kafka Topic Viewer ..."
+    echo
+    
+    echo
+    echo "Building and deploying credit-viewer ... "
+    echo
+    
+    oc project $APPS_NAMESPACE
+
+    mkdir -p ../tmp/creditviewer && cp -r ../sc/KafkaTopicViewer/* ../tmp/creditviewer/ \
+    && cp -r ../sc/KafkaTopicViewer/.mvn ../tmp/creditviewer/ && rm -rf ../tmp/creditviewer/target
+
+    sed -i -e "s/kafka-topic-viewer/credit-viewer/" ../tmp/creditviewer/pom.xml    # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
+
+    cd ../tmp/creditviewer
+    
+    #-Dquarkus.container-image.name=credit-viewer \    # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
+    ./mvnw clean package -DskipTests \
+    -Dquarkus.container-image.group=$APPS_NAMESPACE \
+    -Dquarkus.kubernetes-client.trust-certs=true -Dquarkus.kubernetes.deploy=true \
+    -Dquarkus.openshift.env-vars.kafka-bootstrap-servers.value=$KAFKA_CLUSTER_NAME-kafka-bootstrap:9092 \
+    -Dquarkus.openshift.env-vars.kafka-topic.value=credit \
+    "-Dquarkus.openshift.env-vars.ui-index-title.value=Payment Gateway - Kafka credit Topic Viewer" \
+    -Dquarkus.openshift.env-vars.kafka-consumer-group-id.value=credit-viewer \
+    -Dquarkus.openshift.name=credit-viewer \
+    -Dquarkus.openshift.labels.app=credit-viewer \
+    -Dquarkus.kubernetes.namespace=$APPS_NAMESPACE
+
+    echo
+    echo "Building and deploying credit-response-viewer ... "
+    echo
+
+    cd ../../
+
+    mkdir -p tmp/creditresponseviewer && cp -r sc/KafkaTopicViewer/* tmp/creditresponseviewer/ \
+    && cp -r sc/KafkaTopicViewer/.mvn tmp/creditresponseviewer/ && rm -rf tmp/creditresponseviewer/target
+    cd tmp/creditresponseviewer
+
+    sed -i -e "s/kafka-topic-viewer/credit-response-viewer/" tmp/creditresponseviewer/pom.xml    # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
+    
+    # -Dquarkus.container-image.name=credit-response-viewer \       # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
+    ./mvnw clean package -DskipTests \
+    -Dquarkus.container-image.group=$APPS_NAMESPACE \
+    -Dquarkus.kubernetes-client.trust-certs=true -Dquarkus.kubernetes.deploy=true \
+    -Dquarkus.openshift.env-vars.kafka-bootstrap-servers.value=$KAFKA_CLUSTER_NAME-kafka-bootstrap:9092 \
+    -Dquarkus.openshift.env-vars.kafka-topic.value=credit-response \
+    "-Dquarkus.openshift.env-vars.ui-index-title.value=Payment Gateway - Kafka credit-response Topic Viewer" \
+    -Dquarkus.openshift.env-vars.kafka-consumer-group-id.value=credit-response-viewer \
+    -Dquarkus.openshift.name=credit-response-viewer \
+    -Dquarkus.openshift.labels.app=credit-response-viewer \
+    -Dquarkus.kubernetes.namespace=$APPS_NAMESPACE
+
+    cd ../../bin
+
+}
+
 function configureServiceMeshNetwork(){
     echo 
     printHeader "--> Configuring the Service Mesh Policy ..."
@@ -1200,21 +1243,12 @@ if [ "$PROCEED_INSTALL" != "yes" ]; then
     exit 0
 fi
 
-#echo "Please ensure you had installed the following Operator before proceed ..."
-#echo
-#echo "   * Red Hat ServiceMesh Operator"
-#echo "   * Red Hat ElasticSearch Operator"
-#echo "   * Red Hat Jaeger Operator"
-#echo "   * Red Hat Kiali Operator"
-#echo "   * Red Hat AMQ Streams Operator"
-#echo "   * Prometheus Operator"
-#echo
-
 showConfirmToProceed
 # Not required ----- deployNConfigurePrometheus
 installServiceMesh
 installBaseDemo
 configureServiceMeshNetwork
+deployKafkaTopicViewer
 #install3Scale
 removeTempDirs
 printResult

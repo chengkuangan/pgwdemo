@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{title}</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
+</head>
+<body>
+
+<div class="container">
+
+    <h2>{title}</h2>
+    <p>Note: Do not refresh the page. New messages are displayed from the Kafka topic in real time.</p>
+    <br>
+    <table id="content-table" class="display compact">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+        
+    </table>
+</div>
+</body>
+
+<script>
+    var datatable = $('#content-table');
+    var columnInit = false;
+    var dtOptions = {
+        "stripeClasses": [ 'strip1', 'strip2' ],
+        "order": [[ 4, 'desc' ]],
+        "searching": false,
+        "pageLength": 50
+        };
+    
+    var source = new EventSource("/credit/stream");
+    var latestRow, previousRow;
+    source.onmessage = function (event) {
+        console.log ("string = [" + event.data + "]");
+        if (event.data != ""){
+            var credit = JSON.parse(event.data);
+            initColumns(credit);
+            previousRow = latestRow;
+            latestRow = datatable.DataTable().row.add(credit).draw();
+            highlightNewRow(latestRow);
+        }
+    };
+
+    function initColumns(credit){
+        if (columnInit) return;
+        columnInit = true;
+        
+        var keys = Object.keys(credit);
+        var columns = "";
+        var i = 0;
+        
+        keys.forEach(function(key){
+        //    console.log("key = " + key);
+            columns += '{ "name": "' + key + '", "targets": ' + (i++) + ', "title": "' + key + '", "data": "' + key + '", "className": "dt-body-center"},';
+        });
+        columns = "[" + columns.substring(0, columns.length-1) + "]";
+        //console.log("columns = " + columns);
+        dtOptions.columnDefs = JSON.parse(columns);
+        dtOptions.order = [[ keys.length-1, 'desc' ]];
+        datatable.DataTable(dtOptions);
+    }
+
+    function highlightNewRow(latestRow){
+        var row = latestRow.node();
+        if (typeof previousRow !== 'undefined'){
+            $(previousRow.node()).removeClass("newrow-highlight");
+        }
+        $(row).addClass('newrow-highlight');
+    }
+</script>
+</html>
