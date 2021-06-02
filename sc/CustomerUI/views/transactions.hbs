@@ -1,7 +1,7 @@
 <html>
 
   <head>
-    <title>Paygate - Customer Account</title>
+    <title>Paygate - Transactions History</title>
     <!-- link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" -->
     <meta
       http-equiv="Cache-Control"
@@ -10,21 +10,31 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
     <link rel="stylesheet" type="text/css" href="/css/main.css" />
     <script>
-        // Create our number formatter.
-        var formatter = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        });
-
         $( document ).ready(function() {
-            /*
-            $(".button-submit").click(function(){
-                window.location.href='/transfer';
-            });
-            */
-            $("#account-balance").html(formatter.format({{customer.balance}}));
+            $('#content-table').DataTable( {
+                order: [[ 0, 'desc' ]],
+                data: [
+                  {{#each transactions}}
+                  { "date": "{{dateString}}", 
+                    "account": "{{participateAccount}}<br>{{participateAccountName}}",
+                    "action": "{{action}}",
+                    "amount": {{amount}}, 
+                    "balance": {{sourceAccountBalance}} },
+                  {{/each}}
+                ],
+                columns: [
+                    { "name": "date", "title": "Date", "data": "date", "className": "dt-body-center"},
+                    { "name": "account", "title": "Account", "data": "account", "className": "dt-body-center"},
+                    { "name": "action", "title": "Action", "data": "action", "className": "dt-body-center"},
+                    { "name": "amount", "title": "Amount", "data": "amount", "type":"num-fmt", render: $.fn.dataTable.render.number( ',', '.', 2 ), "className": "dt-body-right"},
+                    { "name": "balance", "title": "Balance", "data": "balance", "type":"num-fmt", render: $.fn.dataTable.render.number( ',', '.', 2 ), "className": "dt-body-right"}
+                ],
+                
+            } );
         });
         
     </script>
@@ -32,26 +42,21 @@
 
   <body>
     {{displayTopMenuBar}}
-    <H1>Welcome {{customer.name}}</H1>
+    <H1>Transactions History</H1>
     <hr class="header-divider">
     <div class="page-desc">
-      The following is your account summary.
+      The following is your transactions history for your account ({{customer.accountId}})
     </div>
-    
-    <p>
-        <div class="content-block">
-            <div class="content-item-title">Account No: </div><div class="content-item-value">{{customer.accountId}}</div>
-        </div>
-        <div class="content-block">
-            <div class="content-item-title">Account Balance: </div><div class="content-item-value" id="account-balance"></div>
-        </div>
-        <!--
-        <div class="content-block">
-            <button class="button-submit">Transfer Money</button>
-        </div>
-        -->
-    </p>
-
+    <br><br>
+    <div class="table">
+      <table id="content-table" class="display compact">
+          <thead><tr><th></th><th></th><th></th><th></th><th></th></tr>
+          </thead>
+          <tbody>
+          </tbody>
+          
+      </table>
+    </div>
     {{#ifEquals status 'error'}}
         <div id="result" class="error">{{error}}</div>
     {{/ifEquals}}

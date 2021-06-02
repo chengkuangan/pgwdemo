@@ -17,7 +17,7 @@ Note: The lowest in the list is the latest change.
 * Enable Red Hat ServiceMesh, an Istio based solution.
 * Changed to use the Prometheus and Grafana included with Red Hat Service Mesh (SM) installation. Created and consolidated the Kafka Grafana dashboards into one single dashboard for demo purpose. Some dashboard charts/components are removed because some metrics are not available from Kafka due to the operator installed SM Prometheus configurations cannot be changed out of the box, or at least I have not figured out a way to do so :-)
 * Added UI services to view real-time messages in Kafka topics. Please refers to [Kafka Topic Viewer](/sc/KafkaTopicViewer/)
-
+* Added Payment History Service (a Camel Quarkus service) to provide API to retrieve payment history from creditresponse MongoDB. Enhanced customer-ui to display payments history.
 ### Product Vesions
 These are product version when this demo is developed. However it should work on other versions provided the products required are supported / can be technically deployed on the OpenShift version.
 
@@ -183,13 +183,34 @@ cd bin
 ```
 ./deployDemo.sh -rd
 ```
-* The RHSSO installed is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO project and run the following command to recreate the RHSSO:
-```
-./deployDemo.sh -sso
-```
+[//]: # (RHSSO is now deployed with persistency using sso74-postgresql-persistent template)
+[//]: # (* The RHSSO installed is ephemeral. The configurations will be lost if the POD restarted or the OpenShift server restarted. Please delete the RHSSO [//] project and run the following command to recreate the RHSSO:)
+[//]: # (```)
+[//]: # (./deployDemo.sh -sso)
+[//]: # (```)
+
 * The username and password for the demo will be printed on command prompt screen after the installation completed.
 
 ## Post Installation Configurations
+
+### Kiali Configuration
+
+The default Kiali installed by Operator excludes DeploymentConfig among others from Kiali workload page. 
+Please refer [DeploymentConfig not showing in workload page of kiali](https://access.redhat.com/solutions/5359141) to configure it. If the `kubernetes_config > excluded_workloads` stanza is not present, you need to manually add the complete stanza as per the following.
+
+```
+$ oc edit kiali -n paygate-istio-system
+spec:
+...
+...
+  istio_namespace: paygate-istio-system
+  kubernetes_config:
+    excluded_workloads:
+    - CronJob
+    - Job
+    - ReplicationController
+    - StatefulSet
+```    
 
 ### Import Grafana Dashboard
 
@@ -262,7 +283,7 @@ The previous Kafka Grafana Dashboard can still be used to demonstrate how this c
 ![Customer UI transfer money page](images/customer_ui_transfer_money.png)
 <br>
 
-![Customer UI transfer money success page](images/customer_ui_transfermoney_success.png)
+![Customer UI payments history page](images/customer-ui-payment-history.png)
 <br>
 
 ## Screen Shots of Red Hat ServiceMesh

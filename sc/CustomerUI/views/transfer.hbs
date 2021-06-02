@@ -1,13 +1,15 @@
 <html>
 
 <head>
-    <title>{{title}}</title>
+    <title>Paygate - Make a Transfer</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/js/inputValidation.js"></script>
     <script src="/js/main.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
     <script>
         /*
         $(document).ready(function () {
@@ -65,10 +67,56 @@
 </head>
 
 <body>
+    {{displayTopMenuBar}}
+    <H1>Make A Transfer</H1>
+    <hr class="header-divider">
+    <div class="page-desc">
+        {{#ifEquals status 'ok'}}
+        Credit Transfer submitted successfully.
+        {{else}}
+        Please enter the account number and amount to transfer.
+        {{/ifEquals}} 
+    </div>
+    <form name="frmTransfer" method="post" action="javascript:submitTransfer()">
+        <p>
+            <div class="content-block">
+                <div class="content-item-title">From Account: </div>
+                <div class="content-item-value">
+                {{#if sourceAccount}}
+                    {{sourceAccount}}
+                {{else}}
+                    {{customer.accountId}}
+                {{/if}}
+                </div>
+            </div>
+            <div class="content-block">
+                <div class="content-item-title">To Account: </div>
+                <div class="content-item-value"><input type="text" name="toAccountId" {{#ifEquals status 'ok'}} readonly {{/ifEquals}} id="toAccountId" data-mandatory="true" value="{{targetAccount}}" size=30></div>
+            </div>
+            <div class="content-block">
+                <div class="content-item-title">Amount: </div><div class="content-item-value"><input type="text" value="{{amount}}" name="amount" {{#ifEquals status 'ok'}} readonly {{/ifEquals}} id="amount" data-mandatory="true" size=25></div>
+            </div>
+        </p>
+        {{#ifNotEquals status 'ok'}}
+        <div class="content-block">
+            <button class="button-submit">Submit</button>
+            <input type="button" class="button" onclick="window.location.href='/';" value="Cancel">
+        </div>
+        {{/ifNotEquals}}
+        {{#if sourceAccount}}
+            <input type="hidden" value="{{sourceAccount}}" name="fromAccountId" id="fromAccountId">
+        {{else}}
+            <input type="hidden" value="{{customer.accountId}}" name="fromAccountId" id="fromAccountId">
+        {{/if}}
+    </form>
+    
+    {{#ifEquals status 'error'}}
+        <div id="result" class="error">{{error}}</div>
+    {{/ifEquals}}
+
+    <!--
+
     <center>
-        <br>
-        <H1>Transfer Money</H1>
-        <br><br>
         {{#ifEquals status 'error'}}
         <span id="result" style="color:red"></span>
         <br><br>
@@ -140,7 +188,8 @@
         </form>
         {{/ifEquals}}
     </center>
-
+    -->
+    {{displayFooter}}
 </body>
 
 </html>

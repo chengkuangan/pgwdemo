@@ -122,6 +122,10 @@
                                     {
                                         "name": "RHSSO_URL",
                                         "value": "${RHSSO_URL}"
+                                    },
+                                    {
+                                        "name": "PAYMENT_HISTORY_URL",
+                                        "value": "${PAYMENT_HISTORY_URL}"
                                     }
                                 ]
                             }
@@ -177,6 +181,13 @@
             "description": "The Customer service complete url with port. This is the Camel service",
             "required": true,
             "value": "http://customerservice:8080/ws/pg/customer"
+        },
+        {
+            "name": "PAYMENT_HISTORY_URL",
+            "displayName": "Customer Service URL",
+            "description": "The Customer service complete url with port. This is the Camel service",
+            "required": true,
+            "value": "http://payment-history-service:8080/payments"
         },
         {
             "name": "RHSSO_URL",

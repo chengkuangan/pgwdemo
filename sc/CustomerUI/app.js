@@ -42,13 +42,27 @@ var keycloak = new Keycloak({ store: memoryStore });
 app.use(keycloak.middleware());
 
 var custRouter = require('./routers/customerRouter.js');
-//app.use('/', custRouter);
-//app.use('/', keycloak.protect('customer'), custRouter);
+/**** Commented out for local testing **/
 app.get('/', keycloak.protect('customer'), customer_controller.index);
 app.get('/transfer', keycloak.protect('customer'), customer_controller.transfer);
 app.post('/transfer', keycloak.protect('customer'), customer_controller.post_transfer);
+app.get('/transactions', keycloak.protect('customer'), customer_controller.transactions);
+
+app.use('/css', express.static(path.join(__dirname, 'css')));
+
+//app.get('/', customer_controller.index);
+//app.get('/transfer', customer_controller.transfer);
+//app.get('/transactions', customer_controller.transactions);
+//app.post('/transfer', customer_controller.post_transfer);
+
 app.get('/metrics', customer_controller.metrics);
 app.get('/healthz', customer_controller.healthz);
+
+var hanldebars_helpers = require('./helpers/handlebarHelper');
+var hbs = require('hbs');
+hbs.registerHelper('displayTopMenuBar', hanldebars_helpers.displayTopMenuBar);
+hbs.registerHelper('displayFooter', hanldebars_helpers.displayFooter);
+hbs.registerHelper('ifNotEquals', hanldebars_helpers.ifNotEquals);
 
 
 //have our app listen on port 3000

@@ -28,6 +28,7 @@ REINSTALL_RHSSO="no"
 RESTART_DEPLOYMENT="no"
 NPM_MIRROR=""
 MAVEN_MIRROR_URL=""
+ERROR_MESSAGES=""
 
 ### ------
 # @Deprecated
@@ -93,6 +94,11 @@ function printWarning(){
     echo -e "${RED}$WARNING${NC}"
 }
 
+function printError(){
+    ERROR=$1
+    echo -e "${RED}$ERROR${NC}"
+}
+
 function printVariables(){
     echo 
     printHeader "The following is the parameters enter..."
@@ -111,6 +117,13 @@ function printVariables(){
     #echo "STRIMZI_SLACK_CHANNEL = $STRIMZI_SLACK_CHANNEL"
     echo
 
+    printWarning "Please increase the limit range configured at OpenShift if there is any. Remove the limit range if possible. Deployment will failed if some of the components cannot request resources more than allowed."
+    
+    echo
+
+    printWarning "Please wait and ensure that all required Operators are ready in the projects before proceed!"
+
+    echo
 }
 
 function preRequisitionCheck(){
@@ -243,11 +256,15 @@ function deployKafka(){
     printHeader "--> Modifying ../templates/kafka/kafka-persistent.yaml"
     echo
     mkdir ../tmp/kafka
+    catchError "Error: Deploy Kafka : Error creating ../tmp/kafka ... "
     cp ../templates/kafka/kafka-persistent.yaml ../tmp/kafka/kafka-persistent.yaml
+    catchError "Error: Deploy Kafka : Error copying template ... "
     sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/kafka-persistent.yaml
+    catchError "Error: Deploy Kafka : Error changing template value ... "
     echo 
     printHeader "--> Deploying AMQ Streams (Kafka) Cluster now ... Using ../kafka-resources/examples/kafka/kafka-persistent.yaml ..."
     oc apply -f ../tmp/kafka/kafka-persistent.yaml -n $APPS_NAMESPACE
+    catchError "Error: Deploy Kafka : Error running 'oc apply -f ../tmp/kafka/kafka-persistent.yaml -n $APPS_NAMESPACE' "
     echo
 }
 
@@ -258,6 +275,7 @@ function deployCRMDB(){
     echo
     # TODO enable prometheus for mongodb
     oc new-app -f ../templates/creditresponse-mongodb-deployment-template.yaml -n $APPS_NAMESPACE
+    catchError "Error: Deploy Credit Response MongoDB (CRMB) : Error running 'oc new-app -f ../templates/creditresponse-mongodb-deployment-template.yaml -n $APPS_NAMESPACE' "
 }
 
 ## --- Perform necessary configuration after CreditResponse MongoDB POD is ready
@@ -287,7 +305,9 @@ function postDeployCreditResponseMongoDBConfig(){
         done
     MONGODB_PATH="$(oc exec $CREDITRESPONSE_MONGODB_POD_NAME -c creditresponse -- ls /opt/rh)"
     oc cp ../scripts/crmdb.js -c creditresponse $CREDITRESPONSE_MONGODB_POD_NAME:/tmp/ -n $APPS_NAMESPACE
+    catchError "Error: CRMB post configuration : Error running 'oc cp ../scripts/crmdb.js -c creditresponse $CREDITRESPONSE_MONGODB_POD_NAME:/tmp/ -n $APPS_NAMESPACE' "
     oc -n $APPS_NAMESPACE exec $CREDITRESPONSE_MONGODB_POD_NAME -c creditresponse -- scl enable $MONGODB_PATH -- mongo localhost:27017/admin /tmp/crmdb.js 
+    catchError "Error: CRMB post configuration : Error running 'oc -n $APPS_NAMESPACE exec $CREDITRESPONSE_MONGODB_POD_NAME -c creditresponse -- scl enable $MONGODB_PATH -- mongo localhost:27017/admin /tmp/crmdb.js' "
 }
 
 # ----- Deploy Kafka Connect
@@ -312,6 +332,7 @@ function deployKafkaConnect(){
             echo "POD: $KAFKA_CLUSTER_NAME-kafka-0, ready: $KAFKA_POD_READY"
         done
     oc apply -f ../templates/kafka/kafka-connect/kafka-connect.yaml -n $APPS_NAMESPACE
+    catchError "Error: Deploy Kafka Connect : Error running 'oc apply -f ../templates/kafka/kafka-connect/kafka-connect.yaml -n $APPS_NAMESPACE' "
 }
 
 ## --- configure kafka connect for Credit Response mongodb
@@ -343,7 +364,7 @@ function configureKafkaConnect4CRMDB(){
     MESSAGE=$(oc -n $APPS_NAMESPACE exec $MONGODB_KAFKA_CONNECT_POD_NAME -- curl -d @/tmp/connect-mongodb-sink.json -H "Content-Type: application/json" -X POST http://localhost:8083/connectors)
     if [[ $MESSAGE == *"error_code"* ]] ; then
         echo
-        echo "Error configuring MongoDB Kafka Connect. Please check the log for more details. Please verify the content is correct in ./CreditResponseMongoDB/connect-mongodb-sink.json"
+        printError "Error configuring MongoDB Kafka Connect. Please check the log for more details. Please verify the content is correct in ./CreditResponseMongoDB/connect-mongodb-sink.json"
     fi
     echo
 }
@@ -386,7 +407,8 @@ function deployRHSSO(){
     #-p SSO_ADMIN_USERNAME=$SSO_ADMIN_USERNAME \
     #-p SSO_ADMIN_PASSWORD=$SSO_ADMIN_PASSWORD
 
-    oc new-app --template=sso73-https -n $RHSSO_NAMESPACE \
+    #oc new-app --template=sso73-https -n $RHSSO_NAMESPACE \
+    oc new-app --template=sso74-postgresql-persistent -n $RHSSO_NAMESPACE \
     -p APPLICATION_NAME=$SSO_APPNAME \
     -p HTTPS_SECRET="sso-app-secret" \
     -p HTTPS_KEYSTORE="keystore.jks" \
@@ -401,6 +423,8 @@ function deployRHSSO(){
     -p SSO_TRUSTSTORE="truststore.jks" \
     -p SSO_TRUSTSTORE_PASSWORD="mykeystorepass" \
     -p SSO_TRUSTSTORE_SECRET="sso-app-secret"
+    
+    catchError "Error: Deploy RHSSO : Error running 'oc new-app --template=sso74-postgresql-persistent ... ' "
 
     #oc new-app --template=sso73-x509-postgresql-persistent -n $RHSSO_NAMESPACE -p APPLICATION_NAME=$SSO_APPNAME -p SSO_ADMIN_USERNAME=$SSO_ADMIN_USERNAME -p SSO_ADMIN_PASSWORD=$SSO_ADMIN_PASSWORD -p POSTGRESQL_IMAGE_STREAM_TAG=latest
     #oc new-app --template=sso73-postgresql-persistent -n $RHSSO_NAMESPACE -p APPLICATION_NAME=$SSO_APPNAME -p SSO_ADMIN_USERNAME=$SSO_ADMIN_USERNAME -p SSO_ADMIN_PASSWORD=$SSO_ADMIN_PASSWORD -p POSTGRESQL_IMAGE_STREAM_TAG=latest
@@ -410,13 +434,15 @@ function deployRHSSO(){
     echo "Configure RHSSO PaymentGateway Realms..."
     echo
     
-    SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-[a-z0-9] | grep -v $SSO_APPNAME-[a-z0-9]-deploy)"
+    #SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-[a-z0-9] | grep -v $SSO_APPNAME-[a-z0-9]-deploy)"
+    SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-.* | grep -v $SSO_APPNAME-[a-z0-9]-deploy | grep -v $SSO_APPNAME-postgresql-.*)"
     # oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n rhsso | grep sso.[a-z0-9].[^deploy]
     echo "Waiting for POD to to be created ... POD Name: $SSO_POD_NAME"
     while [ "$SSO_POD_NAME" = "" ]
         do
             sleep 10
-            SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-[a-z0-9] | grep -v $SSO_APPNAME-[a-z0-9]-deploy)"
+            #SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-[a-z0-9] | grep -v $SSO_APPNAME-[a-z0-9]-deploy)"
+            SSO_POD_NAME="$(oc get pods --no-headers -o custom-columns=NAME:.metadata.name -n $RHSSO_NAMESPACE | grep $SSO_APPNAME-.* | grep -v $SSO_APPNAME-[a-z0-9]-deploy | grep -v $SSO_APPNAME-postgresql-.*)"
             echo "Waiting for POD to to be created ... POD Name: $SSO_POD_NAME"
         done
     echo "Waiting for pod to be ready ..."
@@ -560,10 +586,14 @@ function deployCustomerCamelService(){
 
     # The OCP Deployment settings is in fabric8/deployment.xml
     oc project $APPS_NAMESPACE
-    mvn clean install fabric8:build -DMAVEN_MIRROR_URL=$MAVEN_MIRROR_URL
+    #mvn clean install fabric8:build -DMAVEN_MIRROR_URL=$MAVEN_MIRROR_URL
+    mvn clean install fabric8:build
+    catchError "Error: Deploy Customer Camel Services : Error running 'mvn clean install fabric8:build' "
 
     oc new-app -n $APPS_NAMESPACE -f ../../templates/customerservice-template.yaml
     
+    catchError "Error: Deploy Customer Camel Services : Error running 'oc new-app -n $APPS_NAMESPACE -f ../../templates/customerservice-template.yaml' "
+
     #oc annotate --overwrite svc customerservice prometheus.io/scrape='true' prometheus.io/port='9779'
 
     #mvn clean install fabric8:deploy -Dfabric8.deploy.createExternalUrls=true fabric8:log 
@@ -598,6 +628,40 @@ function deployCustomerUI(){
     # --- Have to explicitly annotate the service to enable prometheus, setting in templates not working for unknown reason.
     #oc annotate --overwrite svc customer-ui prometheus.io/scrape='true' prometheus.io/port='8080' -n $APPS_NAMESPACE
     
+}
+
+function deployPaymentHistoryService(){
+    echo 
+    printHeader "--> Deploying Payment History Service ..."
+    echo
+    
+    echo
+    echo "Building and deploying payment-history-service ... "
+    echo
+    
+    oc project $APPS_NAMESPACE
+
+    mkdir -p ../tmp/payment-history-service && cp -r ../sc/PaymentHistoryService/* ../tmp/payment-history-service/ \
+    && cp -r ../sc/PaymentHistoryService/.mvn ../tmp/payment-history-service/ && rm -rf ../tmp/payment-history-service/target
+
+    cd ../tmp/payment-history-service
+    
+    ./mvnw clean package -DskipTests \
+    -Dquarkus.container-image.group=$APPS_NAMESPACE \
+    -Dquarkus.kubernetes-client.trust-certs=true -Dquarkus.kubernetes.deploy=true \
+    -Dquarkus.openshift.env-vars.mongodb-dbname.value=creditresponse \
+    -Dquarkus.openshift.env-vars.mongodb-collection.value=response \
+    -Dquarkus.openshift.env-vars.mongodb-connection-string.value=mongodb://creditresponse:creditresponse@creditresponse:27017 \
+    -Dquarkus.openshift.env-vars.account-profile-get-endpoint.value=http://accountprofile:8080/ws/pg/account \
+    -Dquarkus.openshift.name=payment-history-service  \
+    -Dquarkus.openshift.labels.app=payment-history-service \
+    -Dquarkus.openshift.labels.app-group=payment-history-service \
+    -Dquarkus.kubernetes.namespace=$APPS_NAMESPACE
+
+    oc patch dc payment-history-service -p '"spec": {"template": { "metadata": { "annotations": { "sidecar.istio.io/inject": "true" }, "labels": { "version": "v1" } } } }' -n $APPS_NAMESPACE
+    
+    cd ../../bin
+
 }
 
 # ----- Import the demo sample data into the respective database 
@@ -938,6 +1002,7 @@ function deployKafkaTopicViewer(){
     -Dquarkus.openshift.name=credit-viewer \
     -Dquarkus.openshift.labels.app=credit-viewer \
     -Dquarkus.kubernetes.namespace=$APPS_NAMESPACE
+    catchError "Error deploying credit-viewer."
 
     echo
     echo "Building and deploying credit-response-viewer ... "
@@ -949,7 +1014,7 @@ function deployKafkaTopicViewer(){
     && cp -r sc/KafkaTopicViewer/.mvn tmp/creditresponseviewer/ && rm -rf tmp/creditresponseviewer/target
     cd tmp/creditresponseviewer
 
-    sed -i -e "s/kafka-topic-viewer/credit-response-viewer/" tmp/creditresponseviewer/pom.xml    # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
+    sed -i -e "s/kafka-topic-viewer/credit-response-viewer/" pom.xml    # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
     
     # -Dquarkus.container-image.name=credit-response-viewer \       # quarkus.container-image.name produces inconsistent outcome... have to manually change pom.xml
     ./mvnw clean package -DskipTests \
@@ -962,6 +1027,7 @@ function deployKafkaTopicViewer(){
     -Dquarkus.openshift.name=credit-response-viewer \
     -Dquarkus.openshift.labels.app=credit-response-viewer \
     -Dquarkus.kubernetes.namespace=$APPS_NAMESPACE
+    catchError "Error deploying credit-response-viewer."
 
     cd ../../bin
 
@@ -1004,6 +1070,7 @@ function restartDeployment(){
         oc rollout restart deployment/customerservice -n $APPS_NAMESPACE
         oc rollout restart deployment/mongodb-connect-cluster-connect -n $APPS_NAMESPACE
         oc rollout restart deployment/event-correlator -n $APPS_NAMESPACE
+        oc rollout restart dc/payment-history-service -n $APPS_NAMESPACE
         exit 0
     fi
 }
@@ -1056,6 +1123,10 @@ function printResult(){
     echo 
     printTitle "PAYMENT GATEWAY INSTALLATION COMPLETED !!!"
     echo
+    if [ ! -z "$ERROR_MESSAGES" ]; then
+        printError "Seems like the deployment completed with some errors. Please refer the following:"
+        printf $ERROR_MESSAGES
+    fi
     echo
     printHeader " You can access to the demo at the following URLs:"
     echo
@@ -1097,6 +1168,9 @@ function printResult(){
     echo -e " * Please logon to Service Mesh Grafana admin console and import the samples dashboards as per the following:"
     echo "    ../templates/grafana/strimzi-all-in-one-sm.json"
     echo "    ../templates/grafana/payment-gateway-overview-sm.json"
+    echo
+    echo " * The default Kiali installed  by Operator excludes DeploymentConfig from the dashboard. Please following the guide below to enable DeploymentConfig:"
+    echo "    https://access.redhat.com/solutions/5359141"
     echo "=============================================================================================================="
     echo
 }
@@ -1161,7 +1235,7 @@ function deployKafkaExporter(){
     cp ../templates/kafka/kafka-exporter/deployment.yaml ../tmp/kafka/kafka-exporter/deployment.yaml
     sed -i -e "s/paygate/$APPS_NAMESPACE/" ../tmp/kafka/kafka-exporter/deployment.yaml
     sed -i -e "s/kafka-cluster-kafka-bootstrap/$KAFKA_CLUSTER_NAME-kafka-bootstrap/" ../tmp/kafka/kafka-exporter/deployment.yaml
-    oc create -f ../tmp/kafka/kafka-exporter/deployment.yaml
+    oc create -f ../tmp/kafka/kafka-exporter/deployment.yaml -n $APPS_NAMESPACE
 }
 
 function updateTemplates(){
@@ -1176,6 +1250,18 @@ function updateTemplates(){
     cp -f ../templates/grafana/strimzi-all-in-one-sm-temp.json ../templates/grafana/strimzi-all-in-one-sm.json
     sed -i -e "s/paygate/$APPS_NAMESPACE/g" ../templates/grafana/strimzi-all-in-one-sm.json
 
+}
+
+function catchError(){
+    if [ $? -ne 0 ]; then
+        echo
+        printError "Error running the above command ... "
+        echo
+        printError $1
+        ERROR_MESSAGES="$ERROR_MESSAGES\n$1\n"
+        #removeTempDirs
+        #exit 0
+    fi
 }
 
 function showConfirmToProceed(){
@@ -1249,6 +1335,7 @@ installServiceMesh
 installBaseDemo
 configureServiceMeshNetwork
 deployKafkaTopicViewer
+deployPaymentHistoryService
 #install3Scale
 removeTempDirs
 printResult

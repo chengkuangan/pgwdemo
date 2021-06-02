@@ -1,0 +1,136 @@
+body{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+div.table{
+    margin: auto;
+    width: 50%;
+}
+
+div.error{
+    margin: auto;
+    width: 50%;
+    padding: 5px;
+    color: red;
+    font-size: small;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+div.footer{
+    position: absolute;
+    bottom: 0;
+    width: 50%;
+    left: 25%;
+    margin: 25px 10px 25px 10px;
+    padding: 5px 0 5px 0;
+    border-bottom: 1px solid lightgray;
+    border-top: 1px solid lightgray;
+}
+
+div.footer-item{
+    color: darkgray;
+    display: inline-block;
+    width:fit-content;
+    font-size: smaller;
+    margin: 0 20px 0 20px;
+    cursor: pointer;
+    transition-duration: 0.4s;
+}
+
+div.footer-item:hover{
+    color: blue;
+}
+
+div.topmenu-bar{
+    margin: auto;
+    width: 50%;
+    padding: 5px;
+}
+
+div.topmenu-bar-item{
+    display: inline-block;
+    margin: 0 auto;
+    padding: 5px 10px 5px 10px;
+    font-size: small;
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+
+div.topmenu-bar-item:hover{
+    background-color: blue;
+    color: white;
+}
+
+h1{
+    text-align: center;
+    margin-top: 50px;
+}
+
+div.page-desc{
+    margin: auto;
+    width: 50%;
+}
+
+div.content-block{
+    margin: auto;
+    width: 50%;
+    padding: 5px;
+}
+
+div.content-item-title{
+    display: inline-block;
+    margin: 0 auto;
+    padding: 1px;
+    font-weight: bolder;
+}
+
+div.content-item-value{
+    display: inline-block;
+    margin: 0 auto;
+    padding: 1px 1px 1px 3px;
+}
+
+.button, .button-submit{
+    /*background-color: darkblue ;*/
+    background-color: white;
+    color: gray;
+    border-style: none;
+    padding: 3px 15px 3px 15px;
+    transition-duration: 0.4s;
+    border-radius: 6px;
+    border: 1px solid darkgray;
+    font-weight: bolder;
+    margin-top: 20px;
+}
+
+.button.submit{
+    font-weight: bolder;
+}
+
+.button:hover, .button-submit:hover {
+    background-color: blue;
+    color: white;
+    border: none;
+    border: 1px solid blue;
+  
+  }
+
+  hr.header-divider{
+      width: 50%;
+      margin: 50px auto 50px auto;
+  }
+
+  input[type=text]{
+    border: none;
+    border-bottom: 2px solid gray;
+  }
+
+  input[type=text]:focus{
+    background-color: gray;
+    color: white;
+    outline: none;
+  }
+
+  a{
+      text-decoration: none;
+  }

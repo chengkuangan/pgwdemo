@@ -8,6 +8,7 @@ var customer_controller = require('../controllers/customerController');
 router.get('/', customer_controller.index);
 router.get('/transfer', customer_controller.transfer);
 router.post('/transfer', customer_controller.post_transfer);
+router.get('/transactions', customer_controller.transactions);
 router.get('/metrics', customer_controller.metrics);
 router.get('/healthz', customer_controller.healthz);
 

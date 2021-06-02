@@ -17,6 +17,7 @@ var customerAPI_URL =
 var creditAPI_URL =
   process.env.CREDIT_API_URL || "http://localhost:8084/ws/pg/credits";
 var rhsso_URL = process.env.RHSSO_URL || "http://localhost:8080";
+var paymentHistory_URL = process.env.PAYMENT_HISTORY_URL || "http://localhost:8080/payments";
 
 let adminClient = new AdminClient({
   realm: "PaymentGateway",
@@ -45,43 +46,74 @@ const transfer_histogram = prometheus.histogram(
 
 // Display index page.
 exports.index = function (req, res) {
-  //const end = index_histogram.startTimer();
-  // retrieve the current login username
-  let currentUsername = req.kauth.grant.access_token.content.preferred_username;
-  // get the accountId from the keycloak user custom attributes
-  adminClient.getUser(
-    currentUsername,
-    function (user) {
-      let accountId = user.attributes.accountId[0];
-      logger.debug("accountId: " + accountId);
-      logger.debug("customerAPI_URL: " + customerAPI_URL);
-      axios
-        .get(customerAPI_URL + "/" + accountId)
-        .then((response) => {
-          customer = response.data[0];
-          logger.debug("customer: " + customer);
-          logger.debug("customer.accountId: " + customer.accountId);
-          logger.debug("customer.balance: " + customer.balance);
-          res.render("index", { customer: customer });
-          //end({ method: req.method, status_code: 200 });
-        })
-        .catch((error) => {
-          logger.error("Error: " + error);
-          //end({ method: req.method, status_code: 500 });
-        });
-    },
-    function (error) {
-      logger.error("Error: " + error);
-      //end({ method: req.method, status_code: 500 });
-    }
-  );
+  //customer = {"accountId": "20191029-MY-123456789", "balance": 120.50, "name": "John Doe"};
+  //res.render("index", { customer: customer});
+  //return;
+  try{
+    // retrieve the current login username
+    let currentUsername = req.kauth.grant.access_token.content.preferred_username;
+    
+    // get the accountId from the keycloak user custom attributes
+    adminClient.getUser(
+      currentUsername,
+      function (user) {
+        let accountId = user.attributes.accountId[0];
+        logger.debug("accountId: " + accountId);
+        logger.debug("customerAPI_URL: " + customerAPI_URL);
+        axios
+          .get(customerAPI_URL + "/" + accountId)
+          .then((response) => {
+            customer = response.data[0];
+            logger.debug("customer: " + customer);
+            logger.debug("customer.accountId: " + customer.accountId);
+            logger.debug("customer.balance: " + customer.balance);
+            res.render("index", { customer: customer });
+            //end({ method: req.method, status_code: 200 });
+          })
+          .catch((error) => {
+            logger.error("Error: " + error);
+            res.render("index", { "status": "error", "error": "Error retrieving account balance" });
+            //end({ method: req.method, status_code: 500 });
+          });
+      },
+      function (error) {
+        logger.error("Error: " + error);
+        res.render("index", { "status": "error", "error": "Error retrieving account balance" });
+        //end({ method: req.method, status_code: 500 });
+      }
+    );
+  }
+  catch(err){
+    logger.error("Error: " + err);
+    res.render("index", { "status": "error", "error": "Error: " + err.message});
+  }
 };
 
 // Display transfer view.
 exports.transfer = function (req, res) {
   logger.debug("creditAPI_URL: " + creditAPI_URL);
   //res.header("Access-Control-Allow-Origin", "*");
-  res.render("transfer", { customer: customer, creditAPI_URL: creditAPI_URL });
+  res.render("transfer", {customer: customer, creditAPI_URL: creditAPI_URL });
+};
+
+// Display transaction history view.
+exports.transactions = function (req, res) {
+  //let transactions = [{"date": "2021-01-25 10:25:09 AM", "sourceAccount":"0123456789", "targetAccount": "987654321", "amount": 15000.20}, {"date": "2021-02-18 09:55:09 PM", "sourceAccount":"0123456789", "targetAccount": "548795124", "amount": 4.2}];
+  logger.debug("PAYMENT_HISTORY_URL: " + paymentHistory_URL + "/" + customer.accountId)
+  axios
+    .get(paymentHistory_URL + "/" + customer.accountId)
+    .then((response) => {
+      let transactions = response.data;
+      //logger.debug("transactions: " + transactions);
+      res.render("transactions", { "transactions": transactions, "customer": customer });
+      //end({ method: req.method, status_code: 200 });
+    })
+    .catch((error) => {
+      logger.error("Error: " + error);
+      res.render("transactions", { "status": "error", "error": "Error retrieving payment history." });
+      //end({ method: req.method, status_code: 500 });
+    });
+  //res.render("transactions", { transactions: transactions });
 };
 
 exports.post_transfer = function (req, res) {
@@ -132,7 +164,7 @@ exports.post_transfer = function (req, res) {
       logger.debug(". Error: " + error);
       res.render("transfer", {
         status: "error",
-        error: "Error submitting the credit transfer",
+        error: "Error submitting the credit transfer. Please try again later.",
         amount: amount,
         sourceAccount: sourceAccount,
         targetAccount: targetAccount,
