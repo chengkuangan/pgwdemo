@@ -22,7 +22,7 @@ spec:
         imagePullPolicy: Always
         args:
           - "--kafka.server=kafka-cluster-kafka-bootstrap.paygate.svc:9092"
-          - "--kafka.version=2.4.0"
+          - "--kafka.version=2.7.0"
           - "--no-sasl.enabled"
           - "--no-sasl.handshake"
           - "--no-tls.enabled"
