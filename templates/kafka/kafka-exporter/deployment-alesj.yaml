@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paygate-kafka-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: paygate-kafka-exporter
+      app.kubernetes.io/instance: 0.6.0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: paygate-kafka-exporter
+        app.kubernetes.io/instance: 0.6.0
+        app: paygate-kafka-exporter
+    spec:
+      containers:
+      - env:
+        - name: QUARKUS_HTTP_PORT
+          value: '9308'
+        - name: QUARKUS_PROFILE
+          value: 'strimzi'
+        name: paygate-kafka-exporter
+        image: docker.io/alesj/kafka-exporter-server:latest
+        #image: docker.io/alesj/kafka_exporter:fork2
+        imagePullPolicy: Always
+        ports:
+          - name: metrics
+            containerPort: 9308
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 100m
+            memory: 250Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paygate-kafka-exporter
+  labels:
+    app: paygate-kafka-exporter
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: '9308'
+    prometheus.io/scrape: 'true'
+spec:
+  type: ClusterIP
+  ports:
+  - name: prometheus
+    port: 9308
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: paygate-kafka-exporter
+    app.kubernetes.io/instance: 0.6.0
