@@ -17,8 +17,9 @@ spec:
     spec:
       containers:
       - name: paygate-kafka-exporter
-        image: danielqsj/kafka-exporter:latest
-        imagePullPolicy: IfNotPresent
+        #image: danielqsj/kafka-exporter:latest
+        image: docker.io/alesj/kafka-exporter-server:latest
+        imagePullPolicy: Always
         args:
           - "--kafka.server=kafka-cluster-kafka-bootstrap.paygate.svc:9092"
           - "--kafka.version=2.4.0"
