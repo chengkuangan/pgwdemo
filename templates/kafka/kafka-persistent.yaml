@@ -65,7 +65,7 @@ spec:
 kafkaExporter:
   topicRegex: ".*"
   groupRegex: ".*"
-  image: docker.io/alesj/kafka-exporter-server:latest
+#  image: docker.io/alesj/kafka-exporter-server:latest
 ---
 kind: ConfigMap
 apiVersion: v1

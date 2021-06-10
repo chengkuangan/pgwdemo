@@ -102,7 +102,6 @@ exports.create = function (req, res) {
   }
 
 };
-
 exports.metrics = function (req, res) {
     // Use the prom-client module to expose our metrics to Prometheus
     const prometheus = require("prom-client");

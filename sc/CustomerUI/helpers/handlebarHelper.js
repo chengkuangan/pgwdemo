@@ -1,7 +1,7 @@
 var hbs = require('hbs');
 
 exports.ifEquals = function (v1, v2, options) {
-    console.log('v1 = ' + v1 + ', v2 = ' + v2 + '. (v1 == v2) = ' + (v1 == v2));
+    //console.log('v1 = ' + v1 + ', v2 = ' + v2 + '. (v1 == v2) = ' + (v1 == v2));
     return (v1 == v2) ? options.fn(this) : options.inverse(this);
 };
 

@@ -54,7 +54,7 @@ objects:
         labels:
           app: ${APPLICATION_NAME}-mongodb
           version: ${APP_VERSION}
-          #pgw-istio: 'true'
+          paygate/kind: springboot
         annotations:
           sidecar.istio.io/inject: "true"
       spec:
